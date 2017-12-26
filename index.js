@@ -9,22 +9,27 @@ class Tanglestash {
      * TANGLESTASH
      * **/
 
-    constructor(data, datatype, secret) {
+    constructor(datatype, secret) {
         // CONSTANTS
+        this.IotaTransactionExampleHash = '999999999999999999999999999999999999999999999999999999999999999999999999999999999';
         this.IotaTransactionSignatureMessageFragmentLength = 2187;
         this.ChunkPaddingLength = 9;
-        this.ChunkScaffoldLength = JSON.stringify(Tanglestash.buildChunk('', 1, 1)).length;
+        this.ChunkScaffoldLength = JSON.stringify(Tanglestash.buildChunk('', 0, this.IotaTransactionExampleHash, 2)).length;
         this.ChunkContentLength = (this.IotaTransactionSignatureMessageFragmentLength - this.ChunkPaddingLength - this.ChunkScaffoldLength);
+        this.ChunkContentLength = 5;
+        this.firstChunkKeyword = '1st';
 
         // PROPERTIES
-        this.data = data;
         this.datatype = datatype || 'file';  // Set file as the default 'datatype' in case none was passed
         this.secret = secret || null;  // Set the secret to 'null' if the user does not want to use encryption
     }
 
-    persistToTangle() {
-        let datastring = this.prepareData(this.data);
-        let chunksContents = this.createChunkContents(datastring);
+    readFromTangle(lastHash) {
+
+    }
+
+    persistToTangle(data) {
+
     }
 
     prepareData(data) {
@@ -114,5 +119,5 @@ class Tanglestash {
 
 module.exports = Tanglestash;
 
-let tanglestash = new Tanglestash('Dies ist nur ein Test!', 'string', 'lel');
-console.log(tanglestash.persistToTangle());
+let tanglestash = new Tanglestash('string', 'lel');
+tanglestash.persistToTangle('Dies ist nur ein Test!');
