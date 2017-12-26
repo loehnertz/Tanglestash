@@ -14,6 +14,12 @@ class Tanglestash {
 
     constructor(provider, datatype, secret) {
         // CONSTANTS
+        this.ChunkShortKeys = {
+            "content": "cC",
+            "index": "iC",
+            "previousHash": "pC",
+            "totalAmount": "tC",
+        };
         this.IotaTransactionDepth = 4;
         this.IotaTransactionMinWeightMagnitude = 14;
         this.IotaSeedLength = 81;
@@ -21,7 +27,7 @@ class Tanglestash {
         this.IotaTransactionExampleHash = '999999999999999999999999999999999999999999999999999999999999999999999999999999999';
         this.IotaTransactionSignatureMessageFragmentLength = 2187;
         this.ChunkPaddingLength = 9;
-        this.ChunkScaffoldLength = JSON.stringify(Tanglestash.buildChunk('', 0, this.IotaTransactionExampleHash, 2)).length;
+        this.ChunkScaffoldLength = JSON.stringify(this.buildChunk('', 0, this.IotaTransactionExampleHash, 2)).length;
         this.ChunkContentLength = (this.IotaTransactionSignatureMessageFragmentLength - this.ChunkPaddingLength - this.ChunkScaffoldLength);
         this.ChunkTag = 'TANGLESTASH9999999999999999';
         this.FirstChunkKeyword = '1st';
@@ -43,10 +49,10 @@ class Tanglestash {
             let transactionBundle = await this.getTransactionFromTangle(previousHash);
             let chunk = JSON.parse(this.iota.utils.extractJson(transactionBundle));
             try {
-                chunkContents.unshift(chunk["cC"]);
-                previousHash = chunk["pC"];
-                this.currentChunkPosition = (parseInt(chunk["iC"]) + 1);
-                this.totalChunkAmount = parseInt(chunk["tC"]);
+                chunkContents.unshift(chunk[this.ChunkShortKeys["content"]]);
+                previousHash = chunk[this.ChunkShortKeys["previousHash"]];
+                this.currentChunkPosition = (parseInt(chunk[this.ChunkShortKeys["index"]]) + 1);
+                this.totalChunkAmount = parseInt(chunk[this.ChunkShortKeys["totalAmount"]]);
             } catch (err) {
                 throw err;
             }
@@ -74,7 +80,7 @@ class Tanglestash {
 
         let previousChunkHash = this.FirstChunkKeyword;
         for (let chunkContent in chunkContents) {
-            let chunk = Tanglestash.buildChunk(
+            let chunk = this.buildChunk(
                 chunkContents[chunkContent],
                 parseInt(chunkContent),
                 previousChunkHash,
@@ -192,13 +198,13 @@ class Tanglestash {
         return datastring.match(regex);
     }
 
-    static buildChunk(chunkContent, indexChunk, previousChunkHash, totalChunksAmount) {
+    buildChunk(chunkContent, indexChunk, previousChunkHash, totalChunksAmount) {
         return (
             {
-                "cC": chunkContent,
-                "iC": indexChunk,
-                "pC": previousChunkHash,
-                "tC": totalChunksAmount
+                [this.ChunkShortKeys["content"]]: chunkContent,
+                [this.ChunkShortKeys["index"]]: indexChunk,
+                [this.ChunkShortKeys["previousHash"]]: previousChunkHash,
+                [this.ChunkShortKeys["totalAmount"]]: totalChunksAmount
             }
         );
     }
