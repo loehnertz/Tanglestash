@@ -1,7 +1,8 @@
 const Fs = require("fs");
 const Path = require("path");
-const Iota = require("iota.lib.js");
+const Randomstring = require('randomstring');
 const CryptoJS = require("crypto-js");
+const Iota = require("iota.lib.js");
 
 
 class Tanglestash {
@@ -9,19 +10,22 @@ class Tanglestash {
      * TANGLESTASH
      * **/
 
-    constructor(datatype, secret) {
+    constructor(provider, datatype, secret) {
         // CONSTANTS
+        this.IotaSeedLength = 81;
+        this.IotaCharset = '9ABCDEFGHIJKLMNOPQRSTUVWXYZ';
         this.IotaTransactionExampleHash = '999999999999999999999999999999999999999999999999999999999999999999999999999999999';
         this.IotaTransactionSignatureMessageFragmentLength = 2187;
         this.ChunkPaddingLength = 9;
         this.ChunkScaffoldLength = JSON.stringify(Tanglestash.buildChunk('', 0, this.IotaTransactionExampleHash, 2)).length;
         this.ChunkContentLength = (this.IotaTransactionSignatureMessageFragmentLength - this.ChunkPaddingLength - this.ChunkScaffoldLength);
-        this.ChunkContentLength = 5;
         this.firstChunkKeyword = '1st';
 
         // PROPERTIES
+        this.iota = new Iota({'provider': provider, sandbox: true});  // Create IOTA instance utilizing the passed provider
         this.datatype = datatype || 'file';  // Set file as the default 'datatype' in case none was passed
         this.secret = secret || null;  // Set the secret to 'null' if the user does not want to use encryption
+        this.seed = this.generateRandomIotaSeed();
     }
 
     readFromTangle(entryHash) {
@@ -32,7 +36,7 @@ class Tanglestash {
         }
     }
 
-    persistToTangle(data) {
+    saveToTangle(data) {
         let datastring = this.prepareData(data);
         let chunksContents = this.createChunkContents(datastring);
         let totalChunkAmount = parseInt(chunksContents.length);
@@ -46,9 +50,7 @@ class Tanglestash {
                 totalChunkAmount
             );
 
-            // TODO: Implement attachment to the Tangle
-
-            previousChunkHash = 'nextHash';
+            let trytesMessage = this.iota.utils.toTrytes(JSON.stringify(chunk));
         }
         let startChunkHash = previousChunkHash;
     }
@@ -92,6 +94,13 @@ class Tanglestash {
                 // TODO: Throw error
                 console.error('No correct "datatype" was passed!');
         }
+    }
+
+    generateRandomIotaSeed() {
+        return Randomstring.generate({
+            length: this.IotaSeedLength,
+            charset: this.IotaCharset,
+        });
     }
 
     createChunkContents(datastring) {
@@ -139,6 +148,3 @@ class Tanglestash {
 }
 
 module.exports = Tanglestash;
-
-let tanglestash = new Tanglestash('string', 'lel');
-tanglestash.persistToTangle('Dies ist nur ein Test!');
