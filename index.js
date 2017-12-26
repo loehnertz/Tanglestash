@@ -18,6 +18,38 @@ class Tanglestash {
 
     }
 
+    encryptData(data) {
+        let base64 = '';
+
+        switch(this.datatype) {
+            case 'file':
+                base64 = Tanglestash.parseFileIntoBase64(data);
+                break;
+            case 'string':
+                base64 = Tanglestash.parseStringIntoBase64(data);
+                break;
+            default:
+                // TODO: Throw error
+        }
+
+        return Tanglestash.encrypt(base64, this.secret);
+    }
+
+    decryptData(data) {
+        let base64 = Tanglestash.decrypt(data, this.secret);
+
+        switch(this.datatype) {
+            case 'file':
+                return Tanglestash.parseFileFromBase64(base64);
+                break;
+            case 'string':
+                return Tanglestash.parseStringFromBase64(base64);
+                break;
+            default:
+            // TODO: Throw error
+        }
+    }
+
     static parseFileIntoBase64(path) {
         let buffer = new Buffer(Fs.readFileSync(Path.resolve(path)));
         return buffer.toString('base64');
