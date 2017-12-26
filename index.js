@@ -8,6 +8,8 @@ const Iota = require("iota.lib.js");
 class Tanglestash {
     /**
      * TANGLESTASH
+     * An algorithm to persist any file onto the DAG of IOTA
+     * By Jakob Löhnertz (www.jakob.codes)
      * **/
 
     constructor(provider, datatype, secret) {
@@ -29,6 +31,8 @@ class Tanglestash {
         this.datatype = datatype || 'file';  // Set file as the default 'datatype' in case none was passed
         this.secret = secret || null;  // Set the secret to 'null' if the user does not want to use encryption
         this.seed = this.generateRandomIotaSeed();  // Generate a fresh and random IOTA seed
+        this.currentChunkPosition = 0;
+        this.totalChunkAmount = 0;
     }
 
     async readFromTangle(entryHash, path) {
@@ -44,25 +48,32 @@ class Tanglestash {
                 this.currentChunkPosition = (parseInt(chunk["iC"]) + 1);
                 this.totalChunkAmount = parseInt(chunk["tC"]);
             } catch (err) {
-                console.error(err);
                 throw err;
             }
         }
 
         let datastringBase64 = chunkContents.join('');
-        console.log(this.decodeData(datastringBase64, path));
+        try {
+            return this.decodeData(datastringBase64, path);
+        } catch (err) {
+            return err.name;
+        }
     }
 
     async saveToTangle(data) {
-        let datastring = this.encodeData(data);
-        let chunkContents = this.createChunkContents(datastring);
-        let totalChunkAmount = parseInt(chunkContents.length);
+        try {
+            let datastring = this.encodeData(data);
+            let chunkContents = this.createChunkContents(datastring);
+            let totalChunkAmount = parseInt(chunkContents.length);
+        } catch (err) {
+            return err.name;
+        }
+
         this.currentChunkPosition = 1;
         this.totalChunkAmount = totalChunkAmount;
 
         let previousChunkHash = this.FirstChunkKeyword;
         for (let chunkContent in chunkContents) {
-            console.log(this.currentChunkPosition, this.totalChunkAmount);
             let chunk = Tanglestash.buildChunk(
                 chunkContents[chunkContent],
                 parseInt(chunkContent),
@@ -75,7 +86,7 @@ class Tanglestash {
             previousChunkHash = transaction["hash"];
             this.currentChunkPosition += 1;
         }
-        console.log(previousChunkHash);
+        return previousChunkHash;
     }
 
     getTransactionFromTangle(transactionHash) {
@@ -99,8 +110,8 @@ class Tanglestash {
                 base64 = Tanglestash.parseStringIntoBase64(data);
                 break;
             default:
-                // TODO: Throw error
                 console.error('No correct "datatype" was passed!');
+                throw new IncorrentDatatype();
         }
 
         if (this.secret) {
@@ -118,6 +129,9 @@ class Tanglestash {
 
         if (this.secret) {
             base64 = Tanglestash.decrypt(base64, this.secret);
+            if (!base64) {
+                throw new PasswordError();
+            }
         }
 
         switch (this.datatype) {
@@ -128,8 +142,8 @@ class Tanglestash {
                 result = Tanglestash.parseStringFromBase64(base64);
                 break;
             default:
-                // TODO: Throw error
                 console.error('No correct "datatype" was passed!');
+                throw new IncorrentDatatype();
         }
 
         return result;
@@ -200,7 +214,13 @@ class Tanglestash {
 
     static parseFileFromBase64(base64, path) {
         let buffer = new Buffer(base64, 'base64');
-        return Fs.writeFileSync(Path.resolve(path), buffer);
+        try {
+            Fs.writeFileSync(Path.resolve(path), buffer);
+            return true;
+        } catch (err) {
+            console.error(err);
+            throw err;
+        }
     }
 
     static parseStringFromBase64(base64) {
@@ -217,11 +237,24 @@ class Tanglestash {
         try {
             return bytes.toString(CryptoJS.enc.Utf8);
         } catch (err) {
-            // TODO: Throw proper error
             console.error('The data could not be decrypted; the secret might be wrong!');
-            throw err;
+            return false;
         }
     }
 }
 
-module.exports = Tanglestash;
+class PasswordError extends Error {
+    constructor(...args) {
+        super(...args);
+        this.name = PasswordError.name;
+    }
+}
+
+class IncorrentDatatype extends Error {
+    constructor(...args) {
+        super(...args);
+        this.name = IncorrentDatatype.name;
+    }
+}
+
+module.exports = {Tanglestash, PasswordError, IncorrentDatatype};
