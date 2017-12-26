@@ -8,11 +8,12 @@ class Tanglestash {
      * TANGLESTASH
      * **/
 
-    constructor() {
-
+    constructor(datatype, secret) {
+        this.datatype = datatype || 'file';  // Set file as the default 'datatype' in case none was passed
+        this.secret = secret || null;  // Set the secret to 'null' if the user does not want to use encryption
     }
 
-    persistToTangle(data, datatype) {
+    persistToTangle(data) {
 
     }
 
@@ -27,4 +28,4 @@ class Tanglestash {
     }
 }
 
-module.exports = { Tanglestash };
+module.exports = Tanglestash;
