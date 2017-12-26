@@ -104,6 +104,28 @@ class Tanglestash {
         return result;
     }
 
+    sendNewIotaTransaction(address, message) {
+        return new Promise((resolve, reject) => {
+            this.iota.api.sendTransfer(
+                this.seed,
+                this.IotaTransactionDepth,
+                this.IotaTransactionMinWeightMagnitude,
+                [
+                    {
+                        'address': address,
+                        'message': message,
+                        'tag': this.ChunkTag,
+                        'value': 0,
+                    }
+                ],
+                (err, bundle) => {
+                    if (err) throw err;
+                    resolve(bundle[0]);
+                }
+            );
+        });
+    }
+
     generateRandomIotaSeed() {
         return Randomstring.generate({
             length: this.IotaSeedLength,
