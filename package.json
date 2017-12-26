@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/loehnertz/tanglestash/issues"
   },
-  "homepage": "https://github.com/loehnertz/tanglestash#readme"
+  "homepage": "https://github.com/loehnertz/tanglestash#readme",
+  "dependencies": {
+    "iota.lib.js": "^0.4.6"
+  }
 }
