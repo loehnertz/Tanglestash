@@ -1,4 +1,5 @@
 const Fs = require("fs");
+const Path = require("path");
 const Iota = require("iota.lib.js");
 const CryptoJS = require("crypto-js");
 
@@ -15,6 +16,23 @@ class Tanglestash {
 
     persistToTangle(data) {
 
+    }
+
+    static parseFileIntoBase64(path) {
+        let buffer = new Buffer(Fs.readFileSync(Path.resolve(path)));
+        return buffer.toString('base64');
+    }
+
+    static parseStringIntoBase64(string) {
+        return new Buffer(string).toString('base64');
+    }
+
+    static parseFileFromBase64(base64) {
+        return new Buffer(base64, 'base64');
+    }
+
+    static parseStringFromBase64(base64) {
+        return new Buffer(base64, 'base64').toString('utf-8')
     }
 
     static encrypt(plaintext, secret) {
