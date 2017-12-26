@@ -31,6 +31,28 @@ class Tanglestash {
         this.seed = this.generateRandomIotaSeed();  // Generate a fresh and random IOTA seed
     }
 
+    async readFromTangle(entryHash, path) {
+        let chunkContents = [];
+
+        let previousHash = entryHash;
+        while (previousHash !== this.FirstChunkKeyword) {
+            let transactionBundle = await this.getTransactionFromTangle(previousHash);
+            let chunk = JSON.parse(this.iota.utils.extractJson(transactionBundle));
+            try {
+                chunkContents.unshift(chunk["cC"]);
+                previousHash = chunk["pC"];
+                this.currentChunkPosition = (parseInt(chunk["iC"]) + 1);
+                this.totalChunkAmount = parseInt(chunk["tC"]);
+            } catch (err) {
+                console.error(err);
+                throw err;
+            }
+        }
+
+        let datastringBase64 = chunkContents.join('');
+        console.log(this.decodeData(datastringBase64, path));
+    }
+
     async saveToTangle(data) {
         let datastring = this.encodeData(data);
         let chunkContents = this.createChunkContents(datastring);
