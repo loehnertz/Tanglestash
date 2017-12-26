@@ -13,7 +13,7 @@ class Tanglestash {
         // CONSTANTS
         this.IotaTransactionSignatureMessageFragmentLength = 2187;
         this.ChunkPaddingLength = 9;
-        this.ChunkScaffoldLength = JSON.stringify(Tanglestash.buildChunkScaffold('', 1, 1)).length;
+        this.ChunkScaffoldLength = JSON.stringify(Tanglestash.buildChunk('', 1, 1)).length;
         this.ChunkContentLength = (this.IotaTransactionSignatureMessageFragmentLength - this.ChunkPaddingLength - this.ChunkScaffoldLength);
 
         // PROPERTIES
@@ -24,7 +24,7 @@ class Tanglestash {
 
     persistToTangle() {
         let datastring = this.prepareData(this.data);
-        let chunks = this.createChunks(datastring);
+        let chunksContents = this.createChunkContents(datastring);
     }
 
     prepareData(data) {
@@ -68,12 +68,12 @@ class Tanglestash {
         }
     }
 
-    createChunks(datastring) {
+    createChunkContents(datastring) {
         let regex = new RegExp(`.{1,${this.ChunkContentLength}}`, 'g');
         return datastring.match(regex);
     }
 
-    static buildChunkScaffold(chunkContent, indexChunk, previousChunkHash, totalChunksAmount) {
+    static buildChunk(chunkContent, indexChunk, previousChunkHash, totalChunksAmount) {
         return (
             {
                 "cC": chunkContent,
