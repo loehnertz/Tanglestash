@@ -15,6 +15,16 @@ class Tanglestash {
     persistToTangle(data, datatype) {
 
     }
+
+    static encrypt(plaintext, secret) {
+        let ciphertext = CryptoJS.AES.encrypt(plaintext, secret);
+        return ciphertext.toString();
+    }
+
+    static decrypt(ciphertext, secret) {
+        let bytes  = CryptoJS.AES.decrypt(ciphertext, secret);
+        return bytes.toString(CryptoJS.enc.Utf8);
+    }
 }
 
 module.exports = { Tanglestash };
