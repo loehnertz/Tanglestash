@@ -56,6 +56,15 @@ class Tanglestash {
         console.log(previousChunkHash);
     }
 
+    getTransactionFromTangle(transactionHash) {
+        return new Promise((resolve, reject) => {
+            this.iota.api.getBundle(transactionHash, (err, transactionBundle) => {
+                if (err) throw err;
+                resolve(transactionBundle);
+            });
+        });
+    }
+
     encodeData(data) {
         let base64 = '';
         let datastring = '';
