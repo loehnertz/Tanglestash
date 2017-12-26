@@ -80,6 +80,29 @@ class Tanglestash {
         return datastring;
     }
 
+    decodeData(data, path) {
+        let base64 = data;
+        let result = '';
+
+        if (this.secret) {
+            base64 = Tanglestash.decrypt(base64, this.secret);
+        }
+
+        switch (this.datatype) {
+            case 'file':
+                result = Tanglestash.parseFileFromBase64(base64, path);
+                break;
+            case 'string':
+                result = Tanglestash.parseStringFromBase64(base64);
+                break;
+            default:
+                // TODO: Throw error
+                console.error('No correct "datatype" was passed!');
+        }
+
+        return result;
+    }
+
     generateRandomIotaSeed() {
         return Randomstring.generate({
             length: this.IotaSeedLength,
