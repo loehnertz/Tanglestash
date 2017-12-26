@@ -40,6 +40,7 @@ class Tanglestash {
 
         let previousChunkHash = this.FirstChunkKeyword;
         for (let chunkContent in chunkContents) {
+            console.log(this.currentChunkPosition, this.totalChunkAmount);
             let chunk = Tanglestash.buildChunk(
                 chunkContents[chunkContent],
                 parseInt(chunkContent),
@@ -107,6 +108,15 @@ class Tanglestash {
         return Randomstring.generate({
             length: this.IotaSeedLength,
             charset: this.IotaCharset,
+        });
+    }
+
+    getNewIotaAddress() {
+        return new Promise((resolve, reject) => {
+            this.iota.api.getNewAddress(this.seed, (err, address) => {
+                if (err) throw err;
+                resolve(address);
+            });
         });
     }
 
