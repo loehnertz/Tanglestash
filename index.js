@@ -23,25 +23,13 @@ class Tanglestash {
     }
 
     persistToTangle() {
-
+        let datastring = this.prepareData(this.data);
+        let chunks = this.createChunks(datastring);
     }
 
-    createChunks(data) {
-
-    }
-
-    static buildChunkScaffold(chunkContent, totalChunksAmount, presentChunkPosition) {
-        return (
-            {
-                "cC": chunkContent,
-                "pC": presentChunkPosition,
-                "tC": totalChunksAmount
-            }
-        );
-    }
-
-    static encryptData(data) {
+    prepareData(data) {
         let base64 = '';
+        let datastring = '';
 
         switch (this.datatype) {
             case 'file':
@@ -51,13 +39,20 @@ class Tanglestash {
                 base64 = Tanglestash.parseStringIntoBase64(data);
                 break;
             default:
-            // TODO: Throw error
+                // TODO: Throw error
+                console.error('No correct "datatype" was passed!');
         }
 
-        return Tanglestash.encrypt(base64, this.secret);
+        if (this.secret) {
+            datastring = Tanglestash.encrypt(base64, this.secret);
+        } else {
+            datastring = base64;
+        }
+
+        return datastring;
     }
 
-    static decryptData(data) {
+    decryptData(data) {
         let base64 = Tanglestash.decrypt(data, this.secret);
 
         switch (this.datatype) {
@@ -68,8 +63,25 @@ class Tanglestash {
                 return Tanglestash.parseStringFromBase64(base64);
                 break;
             default:
-            // TODO: Throw error
+                // TODO: Throw error
+                console.error('No correct "datatype" was passed!');
         }
+    }
+
+    createChunks(datastring) {
+        let regex = new RegExp(`.{1,${this.ChunkContentLength}}`, 'g');
+        return datastring.match(regex);
+    }
+
+    static buildChunkScaffold(chunkContent, indexChunk, previousChunkHash, totalChunksAmount) {
+        return (
+            {
+                "cC": chunkContent,
+                "iC": indexChunk,
+                "pC": previousChunkHash,
+                "tC": totalChunksAmount
+            }
+        );
     }
 
     static parseFileIntoBase64(path) {
@@ -101,3 +113,6 @@ class Tanglestash {
 }
 
 module.exports = Tanglestash;
+
+let tanglestash = new Tanglestash('Dies ist nur ein Test!', 'string', 'lel');
+console.log(tanglestash.persistToTangle());
