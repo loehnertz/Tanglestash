@@ -1,0 +1,19 @@
+{
+  "name": "tanglestash",
+  "version": "0.1.0",
+  "description": "An algorithm to persist any file onto the DAG of IOTA",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/loehnertz/tanglestash.git"
+  },
+  "author": "Jakob Löhnertz",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/loehnertz/tanglestash/issues"
+  },
+  "homepage": "https://github.com/loehnertz/tanglestash#readme"
+}
