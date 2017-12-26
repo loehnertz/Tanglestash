@@ -18,7 +18,7 @@ class Tanglestash {
 
     }
 
-    encryptData(data) {
+    static encryptData(data) {
         let base64 = '';
 
         switch(this.datatype) {
@@ -35,7 +35,7 @@ class Tanglestash {
         return Tanglestash.encrypt(base64, this.secret);
     }
 
-    decryptData(data) {
+    static decryptData(data) {
         let base64 = Tanglestash.decrypt(data, this.secret);
 
         switch(this.datatype) {
