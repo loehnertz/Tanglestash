@@ -9,12 +9,13 @@ class Tanglestash {
      * TANGLESTASH
      * **/
 
-    constructor(datatype, secret) {
+    constructor(data, datatype, secret) {
+        this.data = data;
         this.datatype = datatype || 'file';  // Set file as the default 'datatype' in case none was passed
         this.secret = secret || null;  // Set the secret to 'null' if the user does not want to use encryption
     }
 
-    persistToTangle(data) {
+    persistToTangle() {
 
     }
 
