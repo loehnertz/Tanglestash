@@ -24,12 +24,33 @@ class Tanglestash {
         this.secret = secret || null;  // Set the secret to 'null' if the user does not want to use encryption
     }
 
-    readFromTangle(lastHash) {
-
+    readFromTangle(entryHash) {
+        let nextHash = entryHash;
+        while (nextHash !== this.firstChunkKeyword) {
+            // TODO: Implement read-out from the Tangle
+            nextHash = 'nextHash';
+        }
     }
 
     persistToTangle(data) {
+        let datastring = this.prepareData(data);
+        let chunksContents = this.createChunkContents(datastring);
+        let totalChunkAmount = parseInt(chunksContents.length);
 
+        let previousChunkHash = this.firstChunkKeyword;
+        for (let chunkContent in chunksContents) {
+            let chunk = Tanglestash.buildChunk(
+                chunksContents[chunkContent],
+                parseInt(chunkContent),
+                previousChunkHash,
+                totalChunkAmount
+            );
+
+            // TODO: Implement attachment to the Tangle
+
+            previousChunkHash = 'nextHash';
+        }
+        let startChunkHash = previousChunkHash;
     }
 
     prepareData(data) {
