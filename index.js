@@ -1,6 +1,6 @@
 const Fs = require("fs");
 const Path = require("path");
-const Randomstring = require('randomstring');
+const Randomstring = require("randomstring");
 const CryptoJS = require("crypto-js");
 const Iota = require("iota.lib.js");
 
@@ -12,6 +12,8 @@ class Tanglestash {
 
     constructor(provider, datatype, secret) {
         // CONSTANTS
+        this.IotaTransactionDepth = 4;
+        this.IotaTransactionMinWeightMagnitude = 14;
         this.IotaSeedLength = 81;
         this.IotaCharset = '9ABCDEFGHIJKLMNOPQRSTUVWXYZ';
         this.IotaTransactionExampleHash = '999999999999999999999999999999999999999999999999999999999999999999999999999999999';
@@ -19,43 +21,41 @@ class Tanglestash {
         this.ChunkPaddingLength = 9;
         this.ChunkScaffoldLength = JSON.stringify(Tanglestash.buildChunk('', 0, this.IotaTransactionExampleHash, 2)).length;
         this.ChunkContentLength = (this.IotaTransactionSignatureMessageFragmentLength - this.ChunkPaddingLength - this.ChunkScaffoldLength);
-        this.firstChunkKeyword = '1st';
+        this.ChunkTag = 'TANGLESTASH9999999999999999';
+        this.FirstChunkKeyword = '1st';
 
         // PROPERTIES
-        this.iota = new Iota({'provider': provider, sandbox: true});  // Create IOTA instance utilizing the passed provider
+        this.iota = new Iota({'provider': provider});  // Create IOTA instance utilizing the passed provider
         this.datatype = datatype || 'file';  // Set file as the default 'datatype' in case none was passed
         this.secret = secret || null;  // Set the secret to 'null' if the user does not want to use encryption
-        this.seed = this.generateRandomIotaSeed();
+        this.seed = this.generateRandomIotaSeed();  // Generate a fresh and random IOTA seed
     }
 
-    readFromTangle(entryHash) {
-        let nextHash = entryHash;
-        while (nextHash !== this.firstChunkKeyword) {
-            // TODO: Implement read-out from the Tangle
-            nextHash = 'nextHash';
-        }
-    }
+    async saveToTangle(data) {
+        let datastring = this.encodeData(data);
+        let chunkContents = this.createChunkContents(datastring);
+        let totalChunkAmount = parseInt(chunkContents.length);
+        this.currentChunkPosition = 1;
+        this.totalChunkAmount = totalChunkAmount;
 
-    saveToTangle(data) {
-        let datastring = this.prepareData(data);
-        let chunksContents = this.createChunkContents(datastring);
-        let totalChunkAmount = parseInt(chunksContents.length);
-
-        let previousChunkHash = this.firstChunkKeyword;
-        for (let chunkContent in chunksContents) {
+        let previousChunkHash = this.FirstChunkKeyword;
+        for (let chunkContent in chunkContents) {
             let chunk = Tanglestash.buildChunk(
-                chunksContents[chunkContent],
+                chunkContents[chunkContent],
                 parseInt(chunkContent),
                 previousChunkHash,
                 totalChunkAmount
             );
-
             let trytesMessage = this.iota.utils.toTrytes(JSON.stringify(chunk));
+            let address = await this.getNewIotaAddress();
+            let transaction = await this.sendNewIotaTransaction(address, trytesMessage);
+            previousChunkHash = transaction["hash"];
+            this.currentChunkPosition += 1;
         }
-        let startChunkHash = previousChunkHash;
+        console.log(previousChunkHash);
     }
 
-    prepareData(data) {
+    encodeData(data) {
         let base64 = '';
         let datastring = '';
 
@@ -78,22 +78,6 @@ class Tanglestash {
         }
 
         return datastring;
-    }
-
-    decryptData(data) {
-        let base64 = Tanglestash.decrypt(data, this.secret);
-
-        switch (this.datatype) {
-            case 'file':
-                return Tanglestash.parseFileFromBase64(base64);
-                break;
-            case 'string':
-                return Tanglestash.parseStringFromBase64(base64);
-                break;
-            default:
-                // TODO: Throw error
-                console.error('No correct "datatype" was passed!');
-        }
     }
 
     generateRandomIotaSeed() {
@@ -128,12 +112,13 @@ class Tanglestash {
         return new Buffer(string).toString('base64');
     }
 
-    static parseFileFromBase64(base64) {
-        return new Buffer(base64, 'base64');
+    static parseFileFromBase64(base64, path) {
+        let buffer = new Buffer(base64, 'base64');
+        return Fs.writeFileSync(Path.resolve(path), buffer);
     }
 
     static parseStringFromBase64(base64) {
-        return new Buffer(base64, 'base64').toString('utf-8')
+        return new Buffer(base64, 'base64').toString('utf-8');
     }
 
     static encrypt(plaintext, secret) {
@@ -143,7 +128,13 @@ class Tanglestash {
 
     static decrypt(ciphertext, secret) {
         let bytes = CryptoJS.AES.decrypt(ciphertext, secret);
-        return bytes.toString(CryptoJS.enc.Utf8);
+        try {
+            return bytes.toString(CryptoJS.enc.Utf8);
+        } catch (err) {
+            // TODO: Throw proper error
+            console.error('The data could not be decrypted; the secret might be wrong!');
+            throw err;
+        }
     }
 }
 
