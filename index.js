@@ -10,6 +10,13 @@ class Tanglestash {
      * **/
 
     constructor(data, datatype, secret) {
+        // CONSTANTS
+        this.IotaTransactionSignatureMessageFragmentLength = 2187;
+        this.ChunkPaddingLength = 9;
+        this.ChunkScaffoldLength = JSON.stringify(Tanglestash.buildChunkScaffold('', 1, 1)).length;
+        this.ChunkContentLength = (this.IotaTransactionSignatureMessageFragmentLength - this.ChunkPaddingLength - this.ChunkScaffoldLength);
+
+        // PROPERTIES
         this.data = data;
         this.datatype = datatype || 'file';  // Set file as the default 'datatype' in case none was passed
         this.secret = secret || null;  // Set the secret to 'null' if the user does not want to use encryption
@@ -19,10 +26,24 @@ class Tanglestash {
 
     }
 
+    createChunks(data) {
+
+    }
+
+    static buildChunkScaffold(chunkContent, totalChunksAmount, presentChunkPosition) {
+        return (
+            {
+                "cC": chunkContent,
+                "pC": presentChunkPosition,
+                "tC": totalChunksAmount
+            }
+        );
+    }
+
     static encryptData(data) {
         let base64 = '';
 
-        switch(this.datatype) {
+        switch (this.datatype) {
             case 'file':
                 base64 = Tanglestash.parseFileIntoBase64(data);
                 break;
@@ -30,7 +51,7 @@ class Tanglestash {
                 base64 = Tanglestash.parseStringIntoBase64(data);
                 break;
             default:
-                // TODO: Throw error
+            // TODO: Throw error
         }
 
         return Tanglestash.encrypt(base64, this.secret);
@@ -39,7 +60,7 @@ class Tanglestash {
     static decryptData(data) {
         let base64 = Tanglestash.decrypt(data, this.secret);
 
-        switch(this.datatype) {
+        switch (this.datatype) {
             case 'file':
                 return Tanglestash.parseFileFromBase64(base64);
                 break;
@@ -74,7 +95,7 @@ class Tanglestash {
     }
 
     static decrypt(ciphertext, secret) {
-        let bytes  = CryptoJS.AES.decrypt(ciphertext, secret);
+        let bytes = CryptoJS.AES.decrypt(ciphertext, secret);
         return bytes.toString(CryptoJS.enc.Utf8);
     }
 }
