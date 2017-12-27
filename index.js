@@ -215,7 +215,7 @@ class Tanglestash {
         );
     }
 
-    static getAllMarkyEntries() {
+    getAllMarkyEntries() {
         return Marky.getEntries();
     }
 
