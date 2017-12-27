@@ -48,15 +48,15 @@ class Tanglestash {
         let previousHash = entryHash;
         while (previousHash !== this.FirstChunkKeyword) {
             Marky.mark('readFromTangle');
-            let transactionBundle = await this.getTransactionFromTangle(previousHash);
-            let chunk = JSON.parse(this.iota.utils.extractJson(transactionBundle));
             try {
+                let transactionBundle = await this.getTransactionFromTangle(previousHash);
+                let chunk = JSON.parse(this.iota.utils.extractJson(transactionBundle));
                 chunkContents.unshift(chunk[this.ChunkShortKeys["content"]]);
                 previousHash = chunk[this.ChunkShortKeys["previousHash"]];
                 this.currentChunkPosition = (parseInt(chunk[this.ChunkShortKeys["index"]]) + 1);
                 this.totalChunkAmount = parseInt(chunk[this.ChunkShortKeys["totalAmount"]]);
             } catch (err) {
-                throw err;
+                return [err.name, err.message];
             }
             Marky.stop('readFromTangle');
         }
@@ -65,19 +65,22 @@ class Tanglestash {
         try {
             return this.decodeData(datastringBase64, path);
         } catch (err) {
-            return err.name;
+            return [err.name, err.message];
         }
     }
 
     async saveToTangle(data) {
+        let datastring = '';
+        let chunkContents = [];
+
         try {
-            let datastring = this.encodeData(data);
-            let chunkContents = this.createChunkContents(datastring);
-            let totalChunkAmount = parseInt(chunkContents.length);
+            datastring = this.encodeData(data);
+            chunkContents = this.createChunkContents(datastring);
         } catch (err) {
-            return err.name;
+            return [err.name, err.message];
         }
 
+        let totalChunkAmount = parseInt(chunkContents.length);
         this.currentChunkPosition = 1;
         this.totalChunkAmount = totalChunkAmount;
 
@@ -104,7 +107,16 @@ class Tanglestash {
     getTransactionFromTangle(transactionHash) {
         return new Promise((resolve, reject) => {
             this.iota.api.getBundle(transactionHash, (err, transactionBundle) => {
-                if (err) throw err;
+                if (err) {
+                    switch (err.message) {
+                        case 'Invalid inputs provided':
+                            throw new IncorrectTransactionHashError(err.message);
+                            break;
+                        default:
+                            throw new Error(err.message);
+                            break;
+                    }
+                }
                 resolve(transactionBundle);
             });
         });
@@ -123,7 +135,7 @@ class Tanglestash {
                 break;
             default:
                 console.error('No correct "datatype" was passed!');
-                throw new IncorrentDatatype();
+                throw new IncorrentDatatypeError();
         }
 
         if (this.secret) {
@@ -155,7 +167,7 @@ class Tanglestash {
                 break;
             default:
                 console.error('No correct "datatype" was passed!');
-                throw new IncorrentDatatype();
+                throw new IncorrentDatatypeError();
         }
 
         return result;
@@ -265,11 +277,24 @@ class PasswordError extends Error {
     }
 }
 
-class IncorrentDatatype extends Error {
+class IncorrentDatatypeError extends Error {
     constructor(...args) {
         super(...args);
-        this.name = IncorrentDatatype.name;
+        this.name = IncorrentDatatypeError.name;
     }
 }
 
-module.exports = {Tanglestash, PasswordError, IncorrentDatatype};
+class IncorrectTransactionHashError extends Error {
+    constructor(...args) {
+        super(...args);
+        this.name = IncorrectTransactionHashError.name;
+    }
+}
+
+
+module.exports = {
+    Tanglestash,
+    PasswordError,
+    IncorrentDatatypeError,
+    IncorrectTransactionHashError
+};
