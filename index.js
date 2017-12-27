@@ -3,6 +3,7 @@ const Path = require("path");
 const Randomstring = require("randomstring");
 const CryptoJS = require("crypto-js");
 const Iota = require("iota.lib.js");
+const Marky = require("marky");
 
 
 class Tanglestash {
@@ -46,6 +47,7 @@ class Tanglestash {
 
         let previousHash = entryHash;
         while (previousHash !== this.FirstChunkKeyword) {
+            Marky.mark('readFromTangle');
             let transactionBundle = await this.getTransactionFromTangle(previousHash);
             let chunk = JSON.parse(this.iota.utils.extractJson(transactionBundle));
             try {
@@ -56,7 +58,9 @@ class Tanglestash {
             } catch (err) {
                 throw err;
             }
+            Marky.stop('readFromTangle');
         }
+        console.log(Tanglestash.getAllMarkyEntries());
 
         let datastringBase64 = chunkContents.join('');
         try {
@@ -80,6 +84,7 @@ class Tanglestash {
 
         let previousChunkHash = this.FirstChunkKeyword;
         for (let chunkContent in chunkContents) {
+            Marky.mark('saveToTangle');
             let chunk = this.buildChunk(
                 chunkContents[chunkContent],
                 parseInt(chunkContent),
@@ -91,7 +96,9 @@ class Tanglestash {
             let transaction = await this.sendNewIotaTransaction(address, trytesMessage);
             previousChunkHash = transaction["hash"];
             this.currentChunkPosition += 1;
+            Marky.stop('saveToTangle');
         }
+        console.log(Tanglestash.getAllMarkyEntries());
         return previousChunkHash;
     }
 
@@ -209,6 +216,10 @@ class Tanglestash {
         );
     }
 
+    static getAllMarkyEntries() {
+        return Marky.getEntries();
+    }
+
     static parseFileIntoBase64(path) {
         let buffer = new Buffer(Fs.readFileSync(Path.resolve(path)));
         return buffer.toString('base64');
@@ -264,3 +275,11 @@ class IncorrentDatatype extends Error {
 }
 
 module.exports = {Tanglestash, PasswordError, IncorrentDatatype};
+
+let tanglestash = new Tanglestash('http://astra2261.startdedicated.net:14265', 'string', 'topkek');
+tanglestash.readFromTangle('YVBVCMB9OABEEGREMKKPRLVANGASSIELFOYTJYZ9DFKKLVOSXHMTOPENEUAZOPQGDWTAEMZICLRZZ9999', './test.txt').then((content) => {
+    console.log(content);
+});
+// tanglestash.saveToTangle('./lordquas.jpg').then((entryHash) => {
+//     console.log(entryHash);
+// });
