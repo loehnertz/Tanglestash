@@ -2,8 +2,8 @@ const Fs = require("fs");
 const Path = require("path");
 const Randomstring = require("randomstring");
 const CryptoJS = require("crypto-js");
-const Iota = require("iota.lib.js");
 const Marky = require("marky");
+const Iota = require("iota.lib.js");
 
 
 class Tanglestash {
@@ -60,7 +60,6 @@ class Tanglestash {
             }
             Marky.stop('readFromTangle');
         }
-        console.log(Tanglestash.getAllMarkyEntries());
 
         let datastringBase64 = chunkContents.join('');
         try {
@@ -98,7 +97,7 @@ class Tanglestash {
             this.currentChunkPosition += 1;
             Marky.stop('saveToTangle');
         }
-        console.log(Tanglestash.getAllMarkyEntries());
+
         return previousChunkHash;
     }
 
@@ -235,7 +234,6 @@ class Tanglestash {
             Fs.writeFileSync(Path.resolve(path), buffer);
             return true;
         } catch (err) {
-            console.error(err);
             throw err;
         }
     }
@@ -275,11 +273,3 @@ class IncorrentDatatype extends Error {
 }
 
 module.exports = {Tanglestash, PasswordError, IncorrentDatatype};
-
-let tanglestash = new Tanglestash('http://astra2261.startdedicated.net:14265', 'string', 'topkek');
-tanglestash.readFromTangle('YVBVCMB9OABEEGREMKKPRLVANGASSIELFOYTJYZ9DFKKLVOSXHMTOPENEUAZOPQGDWTAEMZICLRZZ9999', './test.txt').then((content) => {
-    console.log(content);
-});
-// tanglestash.saveToTangle('./lordquas.jpg').then((entryHash) => {
-//     console.log(entryHash);
-// });
