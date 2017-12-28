@@ -56,7 +56,7 @@ class Tanglestash {
                 this.currentChunkPosition = (parseInt(chunk[this.ChunkShortKeys["index"]]) + 1);
                 this.totalChunkAmount = parseInt(chunk[this.ChunkShortKeys["totalAmount"]]);
             } catch (err) {
-                return [err.name, err.message];
+                throw err;
             }
             Marky.stop('readFromTangle');
         }
@@ -86,7 +86,6 @@ class Tanglestash {
 
         let previousChunkHash = this.FirstChunkKeyword;
         for (let chunkContent in chunkContents) {
-            console.log(this.currentChunkPosition, this.totalChunkAmount);
             Marky.mark('saveToTangle');
             let chunk = this.buildChunk(
                 chunkContents[chunkContent],
@@ -95,9 +94,13 @@ class Tanglestash {
                 totalChunkAmount
             );
             let trytesMessage = this.iota.utils.toTrytes(JSON.stringify(chunk));
-            let address = await this.getNewIotaAddress();
-            let transaction = await this.sendNewIotaTransaction(address, trytesMessage);
-            previousChunkHash = transaction["hash"];
+            try {
+                let address = await this.getNewIotaAddress();
+                let transaction = await this.sendNewIotaTransaction(address, trytesMessage);
+                previousChunkHash = transaction["hash"];
+            } catch (err) {
+                throw err;
+            }
             this.currentChunkPosition += 1;
             Marky.stop('saveToTangle');
         }
@@ -114,7 +117,7 @@ class Tanglestash {
                             reject(new IncorrectTransactionHashError(err.message));
                             break;
                         case 'Invalid Bundle provided':
-                            reject(new NodeNotUpToDateError(err.message));
+                            reject(new NodeOutdatedError(err.message));
                             break;
                         default:
                             reject(new Error(err.message));
@@ -190,7 +193,14 @@ class Tanglestash {
                     }
                 ],
                 (err, bundle) => {
-                    if (err) reject(new Error(err.message));
+                    // TODO: Check why this sometimes doesn't reject correctly (if node is outdated)
+                    if (err) {
+                        if (err.message.includes('failed consistency check')) {
+                            reject(new NodeOutdatedError(err.message));
+                        } else {
+                            reject(new Error(err.message));
+                        }
+                    }
                     resolve(bundle[0]);
                 }
             );
@@ -292,10 +302,10 @@ class IncorrectTransactionHashError extends Error {
     }
 }
 
-class NodeNotUpToDateError extends Error {
+class NodeOutdatedError extends Error {
     constructor(...args) {
         super(...args);
-        this.name = NodeNotUpToDateError.name;
+        this.name = NodeOutdatedError.name;
     }
 }
 
@@ -305,5 +315,5 @@ module.exports = {
     IncorrectPasswordError,
     IncorrentDatatypeError,
     IncorrectTransactionHashError,
-    NodeNotUpToDateError,
+    NodeOutdatedError,
 };
