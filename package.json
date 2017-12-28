@@ -1,5 +1,5 @@
 {
-  "name": "Tanglestash",
+  "name": "tanglestash",
   "version": "1.0.0",
   "description": "An algorithm to persist any file onto the DAG of IOTA",
   "main": "index.js",
