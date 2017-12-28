@@ -76,6 +76,13 @@ class Tanglestash {
         }
     }
 
+    /**
+     * Persists data to the Tangle.
+     *
+     * @param {String} data The data as a file path or a string based on `this.datatype`
+     * @param {String} secret [Optional] A secret to encrypt the data
+     * @returns {Promise.<string>} The entry-hash for this persisted data
+     */
     async saveToTangle(data, secret) {
         let datastring = '';
         let chunkContents = [];
