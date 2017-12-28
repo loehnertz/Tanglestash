@@ -41,6 +41,14 @@ class Tanglestash {
         this.totalChunkAmount = 0;
     }
 
+    /**
+     * Retrieves data that was persisted to the Tangle in the past.
+     *
+     * @param {String} entryHash The entry-hash to start the retrieval (return value from `saveToTangle()`)
+     * @param {String} secret [Optional] A secret to decrypt the data if it was persisted with encryption beforehand
+     * @param {String} path [Optional] The path to save the returned file to
+     * @returns {Promise.<*>} A file or a string based on `this.datatype`
+     */
     async readFromTangle(entryHash, secret, path) {
         let chunkContents = [];
 
