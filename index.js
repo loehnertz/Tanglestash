@@ -6,13 +6,13 @@ const Marky = require("marky");
 const Iota = require("iota.lib.js");
 
 
-class Tanglestash {
-    /**
-     * TANGLESTASH
-     * An algorithm to persist any file onto the DAG of IOTA
-     * By Jakob Löhnertz (www.jakob.codes)
-     * **/
+/**
+ * TANGLESTASH
+ * An algorithm to persist any file onto the DAG of IOTA
+ * By Jakob Löhnertz (www.jakob.codes)
+ * **/
 
+class Tanglestash {
     constructor(provider, datatype) {
         // CONSTANTS
         this.ChunkShortKeys = {
@@ -64,7 +64,7 @@ class Tanglestash {
         try {
             return this.decodeData(datastringBase64, secret, path);
         } catch (err) {
-            return [err.name, err.message];
+            throw err;
         }
     }
 
@@ -76,7 +76,7 @@ class Tanglestash {
             datastring = this.encodeData(data, secret);
             chunkContents = this.createChunkContents(datastring);
         } catch (err) {
-            return [err.name, err.message];
+            throw err;
         }
 
         let totalChunkAmount = parseInt(chunkContents.length);
@@ -279,6 +279,11 @@ class Tanglestash {
         }
     }
 }
+
+
+/**
+ * Custom Exceptions
+ * **/
 
 class IncorrectPasswordError extends Error {
     constructor(...args) {
