@@ -46,10 +46,9 @@ class Tanglestash {
      *
      * @param {String} entryHash The entry-hash to start the retrieval (return value from `saveToTangle()`)
      * @param {String} secret [Optional] A secret to decrypt the data if it was persisted with encryption beforehand
-     * @param {String} path [Optional] The path to save the returned file to
      * @returns {Promise.<*>} A file or a string based on `this.datatype`
      */
-    async readFromTangle(entryHash, secret, path) {
+    async readFromTangle(entryHash, secret) {
         let chunkContents = [];
 
         let previousHash = entryHash;
@@ -70,7 +69,7 @@ class Tanglestash {
 
         let datastringBase64 = chunkContents.join('');
         try {
-            return this.decodeData(datastringBase64, secret, path);
+            return this.decodeData(datastringBase64, secret);
         } catch (err) {
             throw err;
         }
@@ -167,7 +166,7 @@ class Tanglestash {
         return datastring;
     }
 
-    decodeData(data, secret, path) {
+    decodeData(data, secret) {
         let base64 = data;
         let result = '';
 
@@ -180,7 +179,7 @@ class Tanglestash {
 
         switch (this.datatype) {
             case 'file':
-                result = Tanglestash.parseFileFromBase64(base64, path);
+                result = Tanglestash.parseFileFromBase64(base64);
                 break;
             case 'string':
                 result = Tanglestash.parseStringFromBase64(base64);
@@ -281,14 +280,8 @@ class Tanglestash {
         return new Buffer(string).toString('base64');
     }
 
-    static parseFileFromBase64(base64, path) {
-        let buffer = new Buffer(base64, 'base64');
-        try {
-            Fs.writeFileSync(Path.resolve(path), buffer);
-            return true;
-        } catch (err) {
-            throw err;
-        }
+    static parseFileFromBase64(base64) {
+        return new Buffer(base64, 'base64');
     }
 
     static parseStringFromBase64(base64) {
