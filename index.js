@@ -13,7 +13,7 @@ class Tanglestash {
      * By Jakob Löhnertz (www.jakob.codes)
      * **/
 
-    constructor(provider, datatype, secret) {
+    constructor(provider, datatype) {
         // CONSTANTS
         this.ChunkShortKeys = {
             "content": "cC",
@@ -36,13 +36,12 @@ class Tanglestash {
         // PROPERTIES
         this.iota = new Iota({'provider': provider});  // Create IOTA instance utilizing the passed provider
         this.datatype = datatype || 'file';  // Set file as the default 'datatype' in case none was passed
-        this.secret = secret || null;  // Set the secret to 'null' if the user does not want to use encryption
         this.seed = this.generateRandomIotaSeed();  // Generate a fresh and random IOTA seed
         this.currentChunkPosition = 0;
         this.totalChunkAmount = 0;
     }
 
-    async readFromTangle(entryHash, path) {
+    async readFromTangle(entryHash, secret, path) {
         let chunkContents = [];
 
         let previousHash = entryHash;
@@ -63,18 +62,18 @@ class Tanglestash {
 
         let datastringBase64 = chunkContents.join('');
         try {
-            return this.decodeData(datastringBase64, path);
+            return this.decodeData(datastringBase64, secret, path);
         } catch (err) {
             return [err.name, err.message];
         }
     }
 
-    async saveToTangle(data) {
+    async saveToTangle(data, secret) {
         let datastring = '';
         let chunkContents = [];
 
         try {
-            datastring = this.encodeData(data);
+            datastring = this.encodeData(data, secret);
             chunkContents = this.createChunkContents(datastring);
         } catch (err) {
             return [err.name, err.message];
@@ -129,7 +128,7 @@ class Tanglestash {
         });
     }
 
-    encodeData(data) {
+    encodeData(data, secret) {
         let base64 = '';
         let datastring = '';
 
@@ -144,8 +143,8 @@ class Tanglestash {
                 throw new IncorrentDatatypeError('No correct "datatype" was passed');
         }
 
-        if (this.secret) {
-            datastring = Tanglestash.encrypt(base64, this.secret);
+        if (secret) {
+            datastring = Tanglestash.encrypt(base64, secret);
         } else {
             datastring = base64;
         }
@@ -153,12 +152,12 @@ class Tanglestash {
         return datastring;
     }
 
-    decodeData(data, path) {
+    decodeData(data, secret, path) {
         let base64 = data;
         let result = '';
 
-        if (this.secret) {
-            base64 = Tanglestash.decrypt(base64, this.secret);
+        if (secret) {
+            base64 = Tanglestash.decrypt(base64, secret);
             if (!base64) {
                 throw new IncorrectPasswordError('Provided secret incorrect');
             }
