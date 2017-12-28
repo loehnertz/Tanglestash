@@ -221,6 +221,11 @@ class Tanglestash {
         });
     }
 
+    /**
+     * Generates a new valid IOTA seed.
+     *
+     * @returns {String} The generated seed
+     */
     generateRandomIotaSeed() {
         return Randomstring.generate({
             length: this.IotaSeedLength,
@@ -228,6 +233,11 @@ class Tanglestash {
         });
     }
 
+    /**
+     * Retrieves a new valid IOTA wallet address.
+     *
+     * @returns {Promise.<string>} The retrieved wallet address
+     */
     getNewIotaAddress() {
         return new Promise((resolve, reject) => {
             this.iota.api.getNewAddress(this.seed, (err, address) => {
@@ -253,6 +263,11 @@ class Tanglestash {
         );
     }
 
+    /**
+     * Returns all the 'marky' timings
+     *
+     * @returns {Array.<object>} The array of the entries from 'marky' timings
+     */
     getAllMarkyEntries() {
         return Marky.getEntries();
     }
