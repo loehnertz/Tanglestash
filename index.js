@@ -13,7 +13,7 @@ const Iota = require("iota.lib.js");
  * **/
 
 class Tanglestash {
-    constructor(provider, datatype) {
+    constructor(provider, datatype, seed) {
         // CONSTANTS
         this.ChunkShortKeys = {
             "content": "cC",
@@ -36,7 +36,7 @@ class Tanglestash {
         // PROPERTIES
         this.iota = new Iota({'provider': provider});  // Create IOTA instance utilizing the passed provider
         this.datatype = datatype || 'file';  // Set file as the default 'datatype' in case none was passed
-        this.seed = this.generateRandomIotaSeed();  // Generate a fresh and random IOTA seed
+        this.seed = seed || this.generateRandomIotaSeed();  // Generate a fresh and random IOTA seed
         this.currentChunkPosition = 0;
         this.totalChunkAmount = 0;
     }
