@@ -59,8 +59,8 @@ class Tanglestash {
                 let chunk = JSON.parse(this.iota.utils.extractJson(transactionBundle));
                 chunkContents.unshift(chunk[this.ChunkShortKeys["content"]]);
                 previousHash = chunk[this.ChunkShortKeys["previousHash"]];
-                this.currentChunkPosition = (parseInt(chunk[this.ChunkShortKeys["index"]]) + 1);
                 this.totalChunkAmount = parseInt(chunk[this.ChunkShortKeys["totalAmount"]]);
+                this.currentChunkPosition = (this.totalChunkAmount - parseInt(chunk[this.ChunkShortKeys["index"]]));
             } catch (err) {
                 throw err;
             }
