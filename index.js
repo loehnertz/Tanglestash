@@ -86,6 +86,7 @@ class Tanglestash {
 
         let previousChunkHash = this.FirstChunkKeyword;
         for (let chunkContent in chunkContents) {
+            console.log(this.currentChunkPosition, this.totalChunkAmount);
             Marky.mark('saveToTangle');
             let chunk = this.buildChunk(
                 chunkContents[chunkContent],
@@ -110,10 +111,13 @@ class Tanglestash {
                 if (err) {
                     switch (err.message) {
                         case 'Invalid inputs provided':
-                            throw new IncorrectTransactionHashError(err.message);
+                            reject(new IncorrectTransactionHashError(err.message));
+                            break;
+                        case 'Invalid Bundle provided':
+                            reject(new NodeNotUpToDateError(err.message));
                             break;
                         default:
-                            throw new Error(err.message);
+                            reject(new Error(err.message));
                             break;
                     }
                 }
@@ -134,8 +138,7 @@ class Tanglestash {
                 base64 = Tanglestash.parseStringIntoBase64(data);
                 break;
             default:
-                console.error('No correct "datatype" was passed!');
-                throw new IncorrentDatatypeError();
+                throw new IncorrentDatatypeError('No correct "datatype" was passed');
         }
 
         if (this.secret) {
@@ -154,7 +157,7 @@ class Tanglestash {
         if (this.secret) {
             base64 = Tanglestash.decrypt(base64, this.secret);
             if (!base64) {
-                throw new PasswordError();
+                throw new IncorrectPasswordError('Provided secret incorrect');
             }
         }
 
@@ -166,8 +169,7 @@ class Tanglestash {
                 result = Tanglestash.parseStringFromBase64(base64);
                 break;
             default:
-                console.error('No correct "datatype" was passed!');
-                throw new IncorrentDatatypeError();
+                throw new IncorrentDatatypeError('No correct "datatype" was passed');
         }
 
         return result;
@@ -188,7 +190,7 @@ class Tanglestash {
                     }
                 ],
                 (err, bundle) => {
-                    if (err) throw err;
+                    if (err) reject(new Error(err.message));
                     resolve(bundle[0]);
                 }
             );
@@ -205,7 +207,7 @@ class Tanglestash {
     getNewIotaAddress() {
         return new Promise((resolve, reject) => {
             this.iota.api.getNewAddress(this.seed, (err, address) => {
-                if (err) throw err;
+                if (err) reject(new Error(err.message));
                 resolve(address);
             });
         });
@@ -264,16 +266,15 @@ class Tanglestash {
         try {
             return bytes.toString(CryptoJS.enc.Utf8);
         } catch (err) {
-            console.error('The data could not be decrypted; the secret might be wrong!');
             return false;
         }
     }
 }
 
-class PasswordError extends Error {
+class IncorrectPasswordError extends Error {
     constructor(...args) {
         super(...args);
-        this.name = PasswordError.name;
+        this.name = IncorrectPasswordError.name;
     }
 }
 
@@ -291,10 +292,18 @@ class IncorrectTransactionHashError extends Error {
     }
 }
 
+class NodeNotUpToDateError extends Error {
+    constructor(...args) {
+        super(...args);
+        this.name = NodeNotUpToDateError.name;
+    }
+}
+
 
 module.exports = {
     Tanglestash,
-    PasswordError,
+    IncorrectPasswordError,
     IncorrentDatatypeError,
-    IncorrectTransactionHashError
+    IncorrectTransactionHashError,
+    NodeNotUpToDateError,
 };
