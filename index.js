@@ -8,11 +8,16 @@ const Iota = require("iota.lib.js");
 
 /**
  * TANGLESTASH
- * An algorithm to persist any file onto the DAG of IOTA
+ * An algorithm to persist any file onto the tangle of IOTA
  * By Jakob Löhnertz (www.jakob.codes)
  * **/
 
 class Tanglestash {
+    /**
+     * @param {String} `provider` A URI of an IOTA full node
+     * @param {String} `datatype` Either 'file' or 'string' based on the data that will later be used
+     * @param {String} `seed` [Optional] An IOTA wallet seed; will be automatically generated if not passed here
+     */
     constructor(provider, datatype, seed) {
         // CONSTANTS
         this.ChunkShortKeys = {
@@ -42,11 +47,11 @@ class Tanglestash {
     }
 
     /**
-     * Retrieves data that was persisted to the Tangle in the past.
+     * Retrieves data that was persisted to the tangle in the past.
      *
-     * @param {String} entryHash The entry-hash to start the retrieval (return value from `saveToTangle()`)
-     * @param {String} secret [Optional] A secret to decrypt the data if it was persisted with encryption beforehand
-     * @returns {Promise.<*>} A file or a string based on `this.datatype`
+     * @param {String} `entryHash` The entry-hash to start the retrieval (return value from `saveToTangle()`)
+     * @param {String} `secret` [Optional] A secret to decrypt the data if it was persisted with encryption beforehand
+     * @returns {Promise.<*>} A file buffer or a string based on `this.datatype`
      */
     async readFromTangle(entryHash, secret) {
         let chunkContents = [];
@@ -76,10 +81,10 @@ class Tanglestash {
     }
 
     /**
-     * Persists data to the Tangle.
+     * Persists data onto the tangle.
      *
-     * @param {String} data The data as a file path or a string based on `this.datatype`
-     * @param {String} secret [Optional] A secret to encrypt the data
+     * @param {String} `data` The data as a file path or a string based on `this.datatype`
+     * @param {String} `secret` [Optional] A secret to encrypt the data
      * @returns {Promise.<string>} The entry-hash for this persisted data
      */
     async saveToTangle(data, secret) {
@@ -221,7 +226,7 @@ class Tanglestash {
     }
 
     /**
-     * Generates a new valid IOTA seed.
+     * Generates a random valid IOTA wallet seed.
      *
      * @returns {String} The generated seed
      */
@@ -233,7 +238,7 @@ class Tanglestash {
     }
 
     /**
-     * Retrieves a new valid IOTA wallet address.
+     * Retrieves a new valid IOTA wallet address based on `this.seed`.
      *
      * @returns {Promise.<string>} The retrieved wallet address
      */
@@ -263,9 +268,9 @@ class Tanglestash {
     }
 
     /**
-     * Returns all the 'marky' timings
+     * Returns all the `marky` entries used to time the main processes.
      *
-     * @returns {Array.<object>} The array of the entries from 'marky' timings
+     * @returns {Array.<object>} The array of the entries from `marky` entries
      */
     getAllMarkyEntries() {
         return Marky.getEntries();
