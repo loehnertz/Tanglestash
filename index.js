@@ -58,28 +58,32 @@ class Tanglestash {
     async readFromTangle(entryHash, secret) {
         let chunkContents = [];
 
-        let previousHash = entryHash;
-        while (previousHash !== this.FirstChunkKeyword) {
-            Marky.mark('readFromTangle');
-            try {
-                let transactionBundle = await this.getTransactionFromTangle(previousHash);
-                let chunk = JSON.parse(this.iota.utils.extractJson(transactionBundle));
-                chunkContents.unshift(chunk[this.ChunkShortKeys["content"]]);
-                previousHash = chunk[this.ChunkShortKeys["previousHash"]];
-                this.totalChunkAmount = parseInt(chunk[this.ChunkShortKeys["totalAmount"]]);
-                this.currentChunkPosition = (this.totalChunkAmount - parseInt(chunk[this.ChunkShortKeys["index"]]));
-            } catch (err) {
-                throw err;
-            }
-            Marky.stop('readFromTangle');
-        }
+        this.chunkBundle = await this.rebuildChunkTable(entryHash);
 
-        let datastringBase64 = chunkContents.join('');
-        try {
-            return this.decodeData(datastringBase64, secret);
-        } catch (err) {
-            throw err;
-        }
+        // let previousHash = entryHash;
+        // while (previousHash !== this.FirstChunkKeyword) {
+        //     Marky.mark('readFromTangle');
+        //
+        //
+        //     try {
+        //         let transactionBundle = await this.getTransactionFromTangle(previousHash);
+        //         let chunk = JSON.parse(this.iota.utils.extractJson(transactionBundle));
+        //         chunkContents.unshift(chunk[this.ChunkShortKeys["content"]]);
+        //         previousHash = chunk[this.ChunkShortKeys["previousHash"]];
+        //         this.totalChunkAmount = parseInt(chunk[this.ChunkShortKeys["totalAmount"]]);
+        //         this.currentChunkPosition = (this.totalChunkAmount - parseInt(chunk[this.ChunkShortKeys["index"]]));
+        //     } catch (err) {
+        //         throw err;
+        //     }
+        //     Marky.stop('readFromTangle');
+        // }
+        //
+        // let datastringBase64 = chunkContents.join('');
+        // try {
+        //     return this.decodeData(datastringBase64, secret);
+        // } catch (err) {
+        //     throw err;
+        // }
     }
 
     /**
@@ -106,6 +110,33 @@ class Tanglestash {
         this.totalChunkAmount = totalChunkAmount;
 
         return await this.persistChunkBundle();
+    }
+
+    async rebuildChunkTable(entryHash) {
+        let chunkTable = {};
+        let chunkTableFragments = [];
+
+        let previousHash = entryHash;
+        while (previousHash !== this.FirstChunkKeyword) {
+            let chunkTableFragment = await this.retrieveJSONFromTanlge(previousHash);
+            chunkTableFragments.unshift(chunkTableFragment);
+            previousHash = chunkTableFragment[this.PreviousHashKey];
+        }
+
+        for (let fragment in chunkTableFragments) {
+            Object.keys(chunkTableFragments[fragment]).forEach(key => {
+                if (key !== this.PreviousHashKey) {
+                    chunkTable[key] = chunkTableFragments[fragment][key];
+                }
+            });
+        }
+
+        return chunkTable;
+    }
+
+    async retrieveJSONFromTanlge(transactionHash) {
+        let transactionBundle = await this.getTransactionFromTangle(transactionHash);
+        return JSON.parse(this.iota.utils.extractJson(transactionBundle));
     }
 
     getTransactionFromTangle(transactionHash) {
