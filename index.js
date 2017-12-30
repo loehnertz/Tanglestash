@@ -134,6 +134,21 @@ class Tanglestash {
         });
     }
 
+    persistChunks(chunkIndices) {
+        for (let chunk in chunkIndices) {
+            this.persistChunk(this.chunkBundle[chunk]).then((resolvedChunk) => {
+                this.chunkBundle[resolvedChunk["index"]] = resolvedChunk;
+                let failedChunkIndex = this.failedChunks.indexOf(resolvedChunk["index"]);
+                if (failedChunkIndex !== -1) {
+                    this.failedChunks.splice(failedChunkIndex, 1);
+                }
+                this.successfulChunks += 1;
+            }).catch((rejectedChunk) => {
+                this.failedChunks.push(rejectedChunk["index"]);
+            });
+        }
+    }
+
     encodeData(data, secret) {
         let base64 = '';
         let datastring = '';
