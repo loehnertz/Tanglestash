@@ -105,12 +105,7 @@ class Tanglestash {
         this.successfulChunks = 0;
         this.totalChunkAmount = totalChunkAmount;
 
-        let initialChunks = [];
-        for (let chunk in this.chunkBundle) {
-            initialChunks.push(this.chunkBundle[chunk]["index"]);
-        }
-
-        this.persistChunks(initialChunks);
+        this.persistChunks();
 
         return await this.finalizeChunkBundle();
     }
@@ -136,7 +131,18 @@ class Tanglestash {
         });
     }
 
-    persistChunks(chunkIndices) {
+    persistChunks() {
+        let initialChunks = [];
+        for (let chunk in this.chunkBundle) {
+            initialChunks.push(this.chunkBundle[chunk]["index"]);
+        }
+
+        this.persistChunkIndices(initialChunks);
+
+        // TODO: Implement error handling for each chunk
+    }
+
+    persistChunkIndices(chunkIndices) {
         for (let chunk in chunkIndices) {
             this.persistChunk(this.chunkBundle[chunk]).then((resolvedChunk) => {
                 this.chunkBundle[resolvedChunk["index"]] = resolvedChunk;
@@ -189,11 +195,9 @@ class Tanglestash {
 
     buildChunkTable() {
         let chunkTable = {};
-
         for (let chunk in this.chunkBundle) {
             chunkTable[this.chunkBundle[chunk]["index"]] = this.chunkBundle[chunk]["hash"];
         }
-
         return chunkTable;
     }
 
