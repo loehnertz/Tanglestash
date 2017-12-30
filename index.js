@@ -30,11 +30,11 @@ class Tanglestash {
         this.IotaTransactionMinWeightMagnitude = 14;
         this.IotaSeedLength = 81;
         this.IotaCharset = '9ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-        this.IotaTransactionExampleHash = '999999999999999999999999999999999999999999999999999999999999999999999999999999999';
         this.IotaTransactionSignatureMessageFragmentLength = 2187;
         this.ChunkPaddingLength = 9;
-        this.ChunkScaffoldLength = JSON.stringify(this.buildChunk('', 0, this.IotaTransactionExampleHash, 2)).length;
-        this.ChunkContentLength = (this.IotaTransactionSignatureMessageFragmentLength - this.ChunkPaddingLength - this.ChunkScaffoldLength);
+        this.ChunkTablePreviousHashLength = 92;
+        this.ChunkContentLength = (this.IotaTransactionSignatureMessageFragmentLength - this.ChunkPaddingLength);
+        this.ChunkTableFragmentLength = (this.ChunkContentLength - this.ChunkTablePreviousHashLength);
         this.ChunkTag = 'TANGLESTASH9999999999999999';
         this.FirstChunkKeyword = '1st';
 
@@ -42,7 +42,7 @@ class Tanglestash {
         this.iota = new Iota({'provider': provider});  // Create IOTA instance utilizing the passed provider
         this.datatype = datatype || 'file';  // Set file as the default 'datatype' in case none was passed
         this.seed = seed || this.generateRandomIotaSeed();  // Generate a fresh and random IOTA seed
-        this.currentChunkPosition = 0;
+        this.successfulChunks = 0;
         this.totalChunkAmount = 0;
     }
 
@@ -99,7 +99,7 @@ class Tanglestash {
         }
 
         let totalChunkAmount = parseInt(chunkContents.length);
-        this.currentChunkPosition = 1;
+        this.successfulChunks = 1;
         this.totalChunkAmount = totalChunkAmount;
 
         let previousChunkHash = this.FirstChunkKeyword;
@@ -119,7 +119,7 @@ class Tanglestash {
             } catch (err) {
                 throw err;
             }
-            this.currentChunkPosition += 1;
+            this.successfulChunks += 1;
             Marky.stop('saveToTangle');
         }
 
@@ -251,8 +251,8 @@ class Tanglestash {
         });
     }
 
-    createChunkContents(datastring) {
-        let regex = new RegExp(`.{1,${this.ChunkContentLength}}`, 'g');
+    createChunkContents(datastring, chunkLength) {
+        let regex = new RegExp(`.{1,${chunkLength}}`, 'g');
         return datastring.match(regex);
     }
 
