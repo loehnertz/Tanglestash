@@ -168,6 +168,24 @@ class Tanglestash {
         }
     }
 
+    async finalizeChunkBundle() {
+        return new Promise((resolve, reject) => {
+            let finishedCheck = setInterval(async () => {
+                if (this.successfulChunks === this.totalChunkAmount) {
+                    clearInterval(finishedCheck);
+                    let chunkTable = this.generateChunkTable();
+                    let chunkTableFragments = this.createChunkContents(JSON.stringify(chunkTable), this.ChunkTableFragmentLength);
+                    try {
+                        let entryHash = await this.persistChunkTable(chunkTableFragments);
+                        resolve(entryHash);
+                    } catch (err) {
+                        reject(err);
+                    }
+                }
+            }, 1234);
+        });
+    }
+
     encodeData(data, secret) {
         let base64 = '';
         let datastring = '';
