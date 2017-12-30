@@ -173,7 +173,7 @@ class Tanglestash {
             let finishedCheck = setInterval(async () => {
                 if (this.successfulChunks === this.totalChunkAmount) {
                     clearInterval(finishedCheck);
-                    let chunkTable = this.generateChunkTable();
+                    let chunkTable = this.buildChunkTable();
                     let chunkTableFragments = this.createChunkContents(JSON.stringify(chunkTable), this.ChunkTableFragmentLength);
                     try {
                         let entryHash = await this.persistChunkTable(chunkTableFragments);
@@ -184,6 +184,16 @@ class Tanglestash {
                 }
             }, 1234);
         });
+    }
+
+    buildChunkTable() {
+        let chunkTable = {};
+
+        for (let chunk in this.chunkBundle) {
+            chunkTable[this.chunkBundle[chunk]["index"]] = this.chunkBundle[chunk]["hash"];
+        }
+
+        return chunkTable;
     }
 
     encodeData(data, secret) {
