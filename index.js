@@ -25,7 +25,7 @@ class Tanglestash {
         this.IotaSeedLength = 81;
         this.IotaCharset = '9ABCDEFGHIJKLMNOPQRSTUVWXYZ';
         this.IotaTransactionSignatureMessageFragmentLength = 2187;
-        this.ChunkPaddingLength = 9;
+        this.ChunkPaddingLength = 19;
         this.ChunkTablePreviousHashLength = 109;
         this.ChunkContentLength = (this.IotaTransactionSignatureMessageFragmentLength - this.ChunkPaddingLength);
         this.ChunkTableFragmentLength = (this.ChunkContentLength - this.ChunkTablePreviousHashLength);
