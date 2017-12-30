@@ -46,6 +46,8 @@ class Tanglestash {
         this.seed = seed || this.generateRandomIotaSeed();  // Generate a fresh and random IOTA seed
         this.successfulChunks = 0;
         this.totalChunkAmount = 0;
+        this.chunkBundle = {};
+        this.failedChunks = [];
     }
 
     /**
@@ -58,7 +60,11 @@ class Tanglestash {
     async readFromTangle(entryHash, secret) {
         let chunkContents = [];
 
-        this.chunkBundle = await this.rebuildChunkTable(entryHash);
+        let chunkTable = await this.rebuildChunkTable(entryHash);
+
+        this.retrieveChunkBundle(chunkTable);
+
+        console.log(this.chunkBundle);
 
         // let previousHash = entryHash;
         // while (previousHash !== this.FirstChunkKeyword) {
@@ -94,9 +100,6 @@ class Tanglestash {
      * @returns {Promise.<string>} The entry-hash for this persisted data
      */
     async saveToTangle(data, secret) {
-        this.chunkBundle = {};
-        this.failedChunks = [];
-
         try {
             let datastring = this.encodeData(data, secret);
             let chunkContents = Tanglestash.chopIntoChunks(datastring, this.ChunkContentLength);
@@ -112,13 +115,46 @@ class Tanglestash {
         return await this.persistChunkBundle();
     }
 
+    async retrieveChunkBundle(chunkTable) {
+        Object.keys(chunkTable).forEach(key => {
+            this.retrieveChunk(chunkTable[key], key).then((resolvedChunk) => {
+                let chunkIndex = resolvedChunk["index"];
+
+                let failedChunkIndex = this.failedChunks.indexOf(chunkIndex);
+                if (failedChunkIndex !== -1) {
+                    this.failedChunks.splice(failedChunkIndex, 1);
+                }
+
+                this.chunkBundle[chunkIndex] = Tanglestash.buildChunkBundleEntry(resolvedChunk["chunk"], chunkIndex);
+                this.successfulChunks += 1;
+                return true;
+            }).catch((rejectedChunk) => {
+                if (this.failedChunks.indexOf(rejectedChunk["index"]) === -1) {
+                    this.failedChunks.push(rejectedChunk["index"]);
+                }
+            });
+        });
+    }
+
+    async retrieveChunk(transactionHash, index) {
+        Marky.mark('readFromTangle');
+
+        try {
+            let chunk = await this.getTransactionFromTangle(transactionHash);
+            Marky.stop('readFromTangle');
+            return {chunk: chunk, index: index};
+        } catch (err) {
+            Marky.stop('readFromTangle');
+        }
+    }
+
     async rebuildChunkTable(entryHash) {
         let chunkTable = {};
         let chunkTableFragments = [];
 
         let previousHash = entryHash;
         while (previousHash !== this.FirstChunkKeyword) {
-            let chunkTableFragment = await this.retrieveJSONFromTanlge(previousHash);
+            let chunkTableFragment = await this.retrieveJSONFromTransaction(previousHash);
             chunkTableFragments.unshift(chunkTableFragment);
             previousHash = chunkTableFragment[this.PreviousHashKey];
         }
@@ -134,7 +170,7 @@ class Tanglestash {
         return chunkTable;
     }
 
-    async retrieveJSONFromTanlge(transactionHash) {
+    async retrieveJSONFromTransaction(transactionHash) {
         let transactionBundle = await this.getTransactionFromTangle(transactionHash);
         return JSON.parse(this.iota.utils.extractJson(transactionBundle));
     }
@@ -164,7 +200,7 @@ class Tanglestash {
         for (let chunk in this.chunkBundle) {
             this.persistChunk(this.chunkBundle[chunk]);
         }
-        return await this.finalizeChunkBundle();
+        return await this.finalizePersistingOfChunkBundle();
     }
 
     async persistChunk(chunk) {
@@ -199,7 +235,7 @@ class Tanglestash {
         }
     }
 
-    async finalizeChunkBundle() {
+    async finalizePersistingOfChunkBundle() {
         return new Promise((resolve, reject) => {
             let finishedCheck = setInterval(async () => {
                 if (this.successfulChunks === this.totalChunkAmount) {
