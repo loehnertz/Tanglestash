@@ -1,6 +1,10 @@
 # Tanglestash
+[![license](https://img.shields.io/npm/l/tanglestash.svg)](https://www.npmjs.com/package/tanglestash)
+[![npm](https://img.shields.io/npm/v/tanglestash.svg)](https://www.npmjs.com/package/tanglestash)
 [![npm](https://img.shields.io/npm/dt/tanglestash.svg)](https://www.npmjs.com/package/tanglestash)
-An algorithm to persist any file onto the tangle of IOTA
+[![daviddm](https://david-dm.org/loehnertz/Tanglestash.svg)](https://david-dm.org/loehnertz/Tanglestash)
+\
+The tangle of IOTA meets BitTorrent: An algorithm to persist any file onto the tangle of IOTA
 
 
 ## Features
@@ -14,7 +18,7 @@ An algorithm to persist any file onto the tangle of IOTA
 ## GUI
 
 **Check out my other project [tanglesta.sh](http://tanglesta.sh/) here on GitHub
-which implements this idea into a full-blown desktop app.**
+which implements this module into a full-blown desktop app available for Windows, macOS and Linux.**
 
 
 ## Idea
@@ -26,8 +30,9 @@ the 2187 trytes of each transactions signature to store any data on the
 decentralised tangle.
 
 This module can persist any string or even files directly onto the tangle
-via creating a chain of transactions that reference their direct predecessor.
-This way, this module can also retrieve any data that was persisted beforehand by
+via creating a torrent-esque chain of transactions that reference other transactions
+holding the data while also referencing their direct predecessor in the chain.
+That way, this module can also retrieve any data that was persisted beforehand by
 just passing the 'entry-hash' into it, which is the first transaction hash of the created chain.
 The data can be optionally encrypted with a secret via AES so that even if someone
 gets hold of an 'entry-hash', the data will still be illegible.
@@ -76,7 +81,7 @@ tanglestash.readFromTangle(entryHash, secret)
 
 #### Return Value
 
-1. **`{Promise.<*>}`** - A file buffer of the retrieved data or a string based on `this.datatype`
+1. **`Promise.<*>`** - A file buffer of the retrieved data or a string based on `this.datatype`
 
 ---
 
@@ -94,7 +99,7 @@ tanglestash.saveToTangle(data, secret)
 
 #### Return Value
 
-1. **`{Promise.<string>}`** - The last transaction hash of the created chain; called 'entry-hash'
+1. **`Promise.<string>`** - The last transaction hash of the created chain; called 'entry-hash'
 
 ---
 
@@ -124,7 +129,7 @@ tanglestash.getNewIotaAddress()
 
 #### Return Value
 
-1. **`{Promise.<string>}`** - The retrieved wallet address
+1. **`Promise.<string>`** - The retrieved wallet address
 
 ---
 
@@ -143,7 +148,12 @@ tanglestash.getAllMarkyEntries()
 1. **`Array.<object>`** - All the timing entries created by `marky`
 
 
-License
--------
+## Donations
+
+If you like this module and want to support it, you can of course donate some IOTA 😊 \
+`QIFKUOEQBCEV9NKFWDBTQYBHLFFORLVKDQSYDSZQQMKTCBLBFDQMJWIOUDH9DLZXVKGNQGKLSAJCQQMEDESLCTHGZD`
+
+
+## License
 
 [MIT](LICENSE)
