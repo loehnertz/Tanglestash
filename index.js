@@ -62,9 +62,7 @@ class Tanglestash {
 
         let chunkTable = await this.rebuildChunkTable(entryHash);
 
-        this.retrieveChunkBundle(chunkTable);
-
-        console.log(this.chunkBundle);
+        this.chunkBundle = await this.retrieveChunkBundle(chunkTable);
 
         // let previousHash = entryHash;
         // while (previousHash !== this.FirstChunkKeyword) {
@@ -117,35 +115,62 @@ class Tanglestash {
 
     async retrieveChunkBundle(chunkTable) {
         Object.keys(chunkTable).forEach(key => {
-            this.retrieveChunk(chunkTable[key], key).then((resolvedChunk) => {
-                let chunkIndex = resolvedChunk["index"];
-
-                let failedChunkIndex = this.failedChunks.indexOf(chunkIndex);
-                if (failedChunkIndex !== -1) {
-                    this.failedChunks.splice(failedChunkIndex, 1);
-                }
-
-                this.chunkBundle[chunkIndex] = Tanglestash.buildChunkBundleEntry(resolvedChunk["chunk"], chunkIndex);
-                this.successfulChunks += 1;
-                return true;
-            }).catch((rejectedChunk) => {
-                if (this.failedChunks.indexOf(rejectedChunk["index"]) === -1) {
-                    this.failedChunks.push(rejectedChunk["index"]);
-                }
-            });
+            this.retrieveChunk(chunkTable[key], key);
         });
+
+        return await this.finalizeRetrievalOfChunkBundle();
     }
 
     async retrieveChunk(transactionHash, index) {
         Marky.mark('readFromTangle');
 
         try {
+            let failedChunkIndex = this.failedChunks.indexOf(index);
+            if (failedChunkIndex !== -1) {
+                this.failedChunks.splice(failedChunkIndex, 1);
+            }
+
             let chunk = await this.getTransactionFromTangle(transactionHash);
+
             Marky.stop('readFromTangle');
-            return {chunk: chunk, index: index};
+
+            this.chunkBundle[index] = Tanglestash.buildChunkBundleEntry(
+                chunk[0]["signatureMessageFragment"],
+                index
+            );
+            this.chunkBundle[index]["retrieved"] = true;
+            this.successfulChunks += 1;
+
+            return true;
         } catch (err) {
             Marky.stop('readFromTangle');
+
+            if (this.failedChunks.indexOf(index) === -1) {
+                this.failedChunks.push(index);
+            }
         }
+    }
+
+    finalizeRetrievalOfChunkBundle() {
+        return new Promise((resolve, reject) => {
+            let finishedCheck = setInterval(async () => {
+                if (this.successfulChunks === 2) {
+                    clearInterval(finishedCheck);
+                    try {
+                        resolve(this.chunkBundle);
+                    } catch (err) {
+                        reject(err);
+                    }
+                } else {
+                    for (let chunk in this.failedChunks) {
+                        let failedChunk = this.chunkBundle[this.failedChunks[chunk]];
+                        if (!failedChunk["retrieved"]) {
+                            this.retrieveChunk(failedChunk, this.failedChunks[chunk]);
+                        }
+                    }
+                }
+            }, 1234);
+        });
     }
 
     async rebuildChunkTable(entryHash) {
@@ -427,6 +452,7 @@ class Tanglestash {
             index: index,
             lastTry: null,
             persisted: false,
+            retrieved: false,
             tries: 0,
         });
     }
