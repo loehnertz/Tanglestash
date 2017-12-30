@@ -252,6 +252,25 @@ class Tanglestash {
         return Marky.getEntries();
     }
 
+    static generateChunkBundle(chunkContents) {
+        let bundle = {};
+        for (let chunkContent in chunkContents) {
+            bundle[chunkContent] = Tanglestash.buildChunkBundleEntry(chunkContents[chunkContent], chunkContent);
+        }
+        return bundle;
+    }
+
+    static buildChunkBundleEntry(chunkContent, index) {
+        return ({
+            content: chunkContent,
+            hash: null,
+            index: index,
+            lastTry: null,
+            persisted: false,
+            tries: 0,
+        });
+    }
+
     static parseFileIntoBase64(path) {
         let buffer = new Buffer(Fs.readFileSync(Path.resolve(path)));
         return buffer.toString('base64');
