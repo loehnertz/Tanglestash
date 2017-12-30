@@ -105,9 +105,7 @@ class Tanglestash {
         this.successfulChunks = 0;
         this.totalChunkAmount = totalChunkAmount;
 
-        this.persistChunks();
-
-        return await this.finalizeChunkBundle();
+        return await this.persistChunkBundle();
     }
 
     getTransactionFromTangle(transactionHash) {
@@ -131,14 +129,16 @@ class Tanglestash {
         });
     }
 
-    persistChunks() {
+    async persistChunkBundle() {
         for (let chunk in this.chunkBundle) {
             this.persistChunk(this.chunkBundle[chunk]);
         }
+        return await this.finalizeChunkBundle();
     }
 
     async persistChunk(chunk) {
         Marky.mark('saveToTangle');
+
         try {
             this.chunkBundle[chunk["index"]]["lastTry"] = Moment();
             this.chunkBundle[chunk["index"]]["tries"] += 1;
@@ -149,21 +149,22 @@ class Tanglestash {
 
             Marky.stop('saveToTangle');
 
-            chunk["hash"] = transaction["hash"];
-            chunk["persisted"] = true;
-            this.chunkBundle[chunk["index"]] = chunk;
             let failedChunkIndex = this.failedChunks.indexOf(chunk["index"]);
             if (failedChunkIndex !== -1) {
                 this.failedChunks.splice(failedChunkIndex, 1);
             }
+
+            chunk["hash"] = transaction["hash"];
+            chunk["persisted"] = true;
+            this.chunkBundle[chunk["index"]] = chunk;
             this.successfulChunks += 1;
             return true;
         } catch (err) {
             Marky.stop('saveToTangle');
+
             if (this.failedChunks.indexOf(chunk["index"]) === -1) {
                 this.failedChunks.push(chunk["index"]);
             }
-            throw err;
         }
     }
 
@@ -213,9 +214,11 @@ class Tanglestash {
             for (let fragment in chunkTableFragments) {
                 fragment = JSON.parse(chunkTableFragments[fragment]);
                 fragment[this.PreviousHashKey] = previousHash;
+
                 let trytesMessage = this.iota.utils.toTrytes(JSON.stringify(fragment));
                 let address = await this.getNewIotaAddress();
                 let transaction = await this.sendNewIotaTransaction(address, trytesMessage);
+
                 previousHash = transaction["hash"];
             }
             return previousHash;
