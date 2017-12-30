@@ -88,42 +88,29 @@ class Tanglestash {
      * @returns {Promise.<string>} The entry-hash for this persisted data
      */
     async saveToTangle(data, secret) {
-        let datastring = '';
-        let chunkContents = [];
+        this.chunkBundle = {};
+        this.failedChunks = [];
 
         try {
-            datastring = this.encodeData(data, secret);
-            chunkContents = this.createChunkContents(datastring);
+            let datastring = this.encodeData(data, secret);
+            let chunkContents = this.createChunkContents(datastring, this.ChunkContentLength);
+            this.chunkBundle = Tanglestash.generateChunkBundle(chunkContents);
         } catch (err) {
             throw err;
         }
 
-        let totalChunkAmount = parseInt(chunkContents.length);
-        this.successfulChunks = 1;
+        let totalChunkAmount = parseInt(Object.keys(this.chunkBundle).length);
+        this.successfulChunks = 0;
         this.totalChunkAmount = totalChunkAmount;
 
-        let previousChunkHash = this.FirstChunkKeyword;
-        for (let chunkContent in chunkContents) {
-            Marky.mark('saveToTangle');
-            let chunk = this.buildChunk(
-                chunkContents[chunkContent],
-                parseInt(chunkContent),
-                previousChunkHash,
-                totalChunkAmount
-            );
-            let trytesMessage = this.iota.utils.toTrytes(JSON.stringify(chunk));
-            try {
-                let address = await this.getNewIotaAddress();
-                let transaction = await this.sendNewIotaTransaction(address, trytesMessage);
-                previousChunkHash = transaction["hash"];
-            } catch (err) {
-                throw err;
-            }
-            this.successfulChunks += 1;
-            Marky.stop('saveToTangle');
+        let initialChunks = [];
+        for (let chunk in this.chunkBundle) {
+            initialChunks.push(this.chunkBundle[chunk]["index"]);
         }
 
-        return previousChunkHash;
+        this.persistChunks(initialChunks);
+
+        return await this.finalizeChunkBundle();
     }
 
     getTransactionFromTangle(transactionHash) {
@@ -254,17 +241,6 @@ class Tanglestash {
     createChunkContents(datastring, chunkLength) {
         let regex = new RegExp(`.{1,${chunkLength}}`, 'g');
         return datastring.match(regex);
-    }
-
-    buildChunk(chunkContent, indexChunk, previousChunkHash, totalChunksAmount) {
-        return (
-            {
-                [this.ChunkShortKeys["content"]]: chunkContent,
-                [this.ChunkShortKeys["index"]]: indexChunk,
-                [this.ChunkShortKeys["previousHash"]]: previousChunkHash,
-                [this.ChunkShortKeys["totalAmount"]]: totalChunksAmount
-            }
-        );
     }
 
     /**
