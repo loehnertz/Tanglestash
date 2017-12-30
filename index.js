@@ -95,7 +95,7 @@ class Tanglestash {
 
         try {
             let datastring = this.encodeData(data, secret);
-            let chunkContents = this.createChunkContents(datastring, this.ChunkContentLength);
+            let chunkContents = Tanglestash.chopIntoChunks(datastring, this.ChunkContentLength);
             this.chunkBundle = Tanglestash.generateChunkBundle(chunkContents);
         } catch (err) {
             throw err;
@@ -181,7 +181,7 @@ class Tanglestash {
                 if (this.successfulChunks === this.totalChunkAmount) {
                     clearInterval(finishedCheck);
                     let chunkTable = this.buildChunkTable();
-                    let chunkTableFragments = this.createChunkContents(JSON.stringify(chunkTable), this.ChunkTableFragmentLength);
+                    let chunkTableFragments = Tanglestash.chopIntoChunks(JSON.stringify(chunkTable), this.ChunkTableFragmentLength);
                     try {
                         let entryHash = await this.persistChunkTable(chunkTableFragments);
                         resolve(entryHash);
@@ -322,11 +322,6 @@ class Tanglestash {
         });
     }
 
-    createChunkContents(datastring, chunkLength) {
-        let regex = new RegExp(`.{1,${chunkLength}}`, 'g');
-        return datastring.match(regex);
-    }
-
     /**
      * Returns all the `marky` entries used to time the main processes.
      *
@@ -334,6 +329,11 @@ class Tanglestash {
      */
     getAllMarkyEntries() {
         return Marky.getEntries();
+    }
+
+    static chopIntoChunks(datastring, chunkLength) {
+        let regex = new RegExp(`.{1,${chunkLength}}`, 'g');
+        return datastring.match(regex);
     }
 
     static generateChunkBundle(chunkContents) {
