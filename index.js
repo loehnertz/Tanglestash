@@ -138,8 +138,6 @@ class Tanglestash {
         }
 
         this.persistChunkIndices(initialChunks);
-
-        // TODO: Implement error handling for each chunk
     }
 
     persistChunkIndices(chunkIndices) {
@@ -180,17 +178,24 @@ class Tanglestash {
             let finishedCheck = setInterval(async () => {
                 if (this.successfulChunks === this.totalChunkAmount) {
                     clearInterval(finishedCheck);
-                    let chunkTable = this.buildChunkTable();
-                    let chunkTableFragments = Tanglestash.chopIntoChunks(JSON.stringify(chunkTable), this.ChunkTableFragmentLength);
                     try {
-                        let entryHash = await this.persistChunkTable(chunkTableFragments);
-                        resolve(entryHash);
+                        resolve(await this.finalizeChunkTable());
                     } catch (err) {
                         reject(err);
                     }
                 }
             }, 1234);
         });
+    }
+
+    async finalizeChunkTable() {
+        let chunkTable = this.buildChunkTable();
+        let chunkTableFragments = Tanglestash.chopIntoChunks(JSON.stringify(chunkTable), this.ChunkTableFragmentLength);
+        try {
+            return await this.persistChunkTable(chunkTableFragments);
+        } catch (err) {
+            throw err;
+        }
     }
 
     buildChunkTable() {
