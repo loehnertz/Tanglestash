@@ -37,6 +37,7 @@ class Tanglestash {
         this.ChunkContentLength = (this.IotaTransactionSignatureMessageFragmentLength - this.ChunkPaddingLength);
         this.ChunkTableFragmentLength = (this.ChunkContentLength - this.ChunkTablePreviousHashLength);
         this.ChunkTag = 'TANGLESTASH9999999999999999';
+        this.PreviousHashKey = 'PCTFH';
         this.FirstChunkKeyword = '1st';
 
         // PROPERTIES
@@ -194,6 +195,23 @@ class Tanglestash {
         }
 
         return chunkTable;
+    }
+
+    async persistChunkTable(chunkTableFragments) {
+        try {
+            let previousHash = this.FirstChunkKeyword;
+            for (let fragment in chunkTableFragments) {
+                fragment = JSON.parse(chunkTableFragments[fragment]);
+                fragment[this.PreviousHashKey] = previousHash;
+                let trytesMessage = this.iota.utils.toTrytes(JSON.stringify(fragment));
+                let address = await this.getNewIotaAddress();
+                let transaction = await this.sendNewIotaTransaction(address, trytesMessage);
+                previousHash = transaction["hash"];
+            }
+            return previousHash;
+        } catch (err) {
+            throw err;
+        }
     }
 
     encodeData(data, secret) {
