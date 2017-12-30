@@ -132,26 +132,8 @@ class Tanglestash {
     }
 
     persistChunks() {
-        let initialChunks = [];
         for (let chunk in this.chunkBundle) {
-            initialChunks.push(this.chunkBundle[chunk]["index"]);
-        }
-
-        this.persistChunkIndices(initialChunks);
-    }
-
-    persistChunkIndices(chunkIndices) {
-        for (let chunk in chunkIndices) {
-            this.persistChunk(this.chunkBundle[chunk]).then((resolvedChunk) => {
-                this.chunkBundle[resolvedChunk["index"]] = resolvedChunk;
-                let failedChunkIndex = this.failedChunks.indexOf(resolvedChunk["index"]);
-                if (failedChunkIndex !== -1) {
-                    this.failedChunks.splice(failedChunkIndex, 1);
-                }
-                this.successfulChunks += 1;
-            }).catch((rejectedChunk) => {
-                this.failedChunks.push(rejectedChunk["index"]);
-            });
+            this.persistChunk(this.chunkBundle[chunk]);
         }
     }
 
@@ -160,15 +142,25 @@ class Tanglestash {
         try {
             this.chunkBundle[chunk["index"]]["lastTry"] = Moment();
             this.chunkBundle[chunk["index"]]["tries"] += 1;
+
             let trytesMessage = this.iota.utils.toTrytes(JSON.stringify(chunk["content"]));
             let address = await this.getNewIotaAddress();
             let transaction = await this.sendNewIotaTransaction(address, trytesMessage);
+
+            Marky.stop('saveToTangle');
+
             chunk["hash"] = transaction["hash"];
             chunk["persisted"] = true;
-            Marky.stop('saveToTangle');
-            return chunk;
+            this.chunkBundle[chunk["index"]] = chunk;
+            let failedChunkIndex = this.failedChunks.indexOf(chunk["index"]);
+            if (failedChunkIndex !== -1) {
+                this.failedChunks.splice(failedChunkIndex, 1);
+            }
+            this.successfulChunks += 1;
+            return true;
         } catch (err) {
             Marky.stop('saveToTangle');
+            this.failedChunks.push(chunk["index"]);
             throw err;
         }
     }
@@ -182,6 +174,13 @@ class Tanglestash {
                         resolve(await this.finalizeChunkTable());
                     } catch (err) {
                         reject(err);
+                    }
+                } else {
+                    for (let chunk in this.failedChunks) {
+                        let failedChunk = this.chunkBundle[this.failedChunks[chunk]];
+                        if (!failedChunk["persisted"]) {
+                            this.persistChunk(failedChunk);
+                        }
                     }
                 }
             }, 1234);
