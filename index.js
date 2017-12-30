@@ -160,7 +160,9 @@ class Tanglestash {
             return true;
         } catch (err) {
             Marky.stop('saveToTangle');
-            this.failedChunks.push(chunk["index"]);
+            if (this.failedChunks.indexOf(chunk["index"]) === -1) {
+                this.failedChunks.push(chunk["index"]);
+            }
             throw err;
         }
     }
