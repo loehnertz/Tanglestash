@@ -1,6 +1,7 @@
 const Fs = require("fs");
 const Path = require("path");
 const Randomstring = require("randomstring");
+const Moment = require("moment");
 const CryptoJS = require("crypto-js");
 const Marky = require("marky");
 const Iota = require("iota.lib.js");
@@ -146,6 +147,24 @@ class Tanglestash {
             }).catch((rejectedChunk) => {
                 this.failedChunks.push(rejectedChunk["index"]);
             });
+        }
+    }
+
+    async persistChunk(chunk) {
+        Marky.mark('saveToTangle');
+        try {
+            this.chunkBundle[chunk["index"]]["lastTry"] = Moment();
+            this.chunkBundle[chunk["index"]]["tries"] += 1;
+            let trytesMessage = this.iota.utils.toTrytes(JSON.stringify(chunk["content"]));
+            let address = await this.getNewIotaAddress();
+            let transaction = await this.sendNewIotaTransaction(address, trytesMessage);
+            chunk["hash"] = transaction["hash"];
+            chunk["persisted"] = true;
+            Marky.stop('saveToTangle');
+            return chunk;
+        } catch (err) {
+            Marky.stop('saveToTangle');
+            throw err;
         }
     }
 
