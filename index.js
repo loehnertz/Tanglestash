@@ -119,6 +119,7 @@ class Tanglestash {
 
         try {
             this.chunkBundle[index] = Tanglestash.buildChunkBundleEntry(null, index);
+            this.chunkBundle[index]["hash"] = transactionHash;
 
             let failedChunkIndex = this.failedChunks.indexOf(index);
             if (failedChunkIndex !== -1) {
@@ -158,7 +159,7 @@ class Tanglestash {
                     for (let chunk in this.failedChunks) {
                         let failedChunk = this.chunkBundle[this.failedChunks[chunk]];
                         if (!failedChunk["retrieved"]) {
-                            this.retrieveChunk(failedChunk, this.failedChunks[chunk]);
+                            this.retrieveChunk(failedChunk["hash"], this.failedChunks[chunk]);
                         }
                     }
                 }
