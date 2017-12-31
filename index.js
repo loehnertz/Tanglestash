@@ -370,15 +370,6 @@ class Tanglestash {
         });
     }
 
-    getParentTransactions() {
-        let randomParentTransactionsIndex = Tanglestash.drawRandomNumberBetween(0, (this.potentialParentTransactions.length - 1));
-        let randomParentTransactions = this.potentialParentTransactions[randomParentTransactionsIndex];
-        return ({
-            branchTransaction: randomParentTransactions["branchTransaction"],
-            trunkTransaction: randomParentTransactions["hash"],
-        });
-    }
-
     async sendTransaction(address, message) {
         try {
             let parentTransactions = this.getParentTransactions();
@@ -392,6 +383,40 @@ class Tanglestash {
         } catch (err) {
             throw err;
         }
+    }
+
+    getParentTransactions() {
+        let randomParentTransactionsIndex = Tanglestash.drawRandomNumberBetween(0, (this.potentialParentTransactions.length - 1));
+        let randomParentTransactions = this.potentialParentTransactions[randomParentTransactionsIndex];
+        return ({
+            branchTransaction: randomParentTransactions["branchTransaction"],
+            trunkTransaction: randomParentTransactions["hash"],
+        });
+    }
+
+    async prepareTransferTrytes(address, message) {
+        return new Promise((resolve, reject) => {
+            this.iota.api.prepareTransfers(
+                this.seed,
+                [
+                    {
+                        'address': address,
+                        'message': message,
+                        'tag': this.ChunkTag,
+                        'value': 0,
+                    }
+                ],
+                (err, bundle) => {
+                    if (err) {
+                        if (err.message.includes('failed consistency check')) {
+                            reject(new NodeOutdatedError(err.message));
+                        } else {
+                            reject(new Error(err.message));
+                        }
+                    }
+                    resolve(bundle[0]);
+                });
+        });
     }
 
     sendNewIotaTransaction(address, message) {
