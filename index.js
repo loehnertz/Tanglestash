@@ -379,6 +379,21 @@ class Tanglestash {
         });
     }
 
+    async sendTransaction(address, message) {
+        try {
+            let parentTransactions = this.getParentTransactions();
+            let transferTrytes = await this.prepareTransferTrytes(address, message);
+            let transactionTrytes = await this.attachToTangle(
+                transferTrytes,
+                parentTransactions.trunkTransaction,
+                parentTransactions.branchTransaction,
+            );
+            return await this.broadcastTransaction(transactionTrytes);
+        } catch (err) {
+            throw err;
+        }
+    }
+
     sendNewIotaTransaction(address, message) {
         return new Promise((resolve, reject) => {
             this.iota.api.sendTransfer(
