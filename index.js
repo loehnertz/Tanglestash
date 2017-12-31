@@ -53,11 +53,14 @@ class Tanglestash {
      * @returns {Promise.<*>} A file buffer or a string based on `this.datatype`
      */
     async readFromTangle(entryHash, secret) {
+        try {
+            let chunkTable = await this.rebuildChunkTable(entryHash);
+            this.chunkBundle = await this.retrieveChunkBundle(chunkTable);
+        } catch (err) {
+            throw err;
+        }
+
         let chunkContents = [];
-
-        let chunkTable = await this.rebuildChunkTable(entryHash);
-        this.chunkBundle = await this.retrieveChunkBundle(chunkTable);
-
         for (let i = 0; i < this.totalChunkAmount; i++) {
             chunkContents.push(this.chunkBundle[i]["content"]);
         }
@@ -90,7 +93,11 @@ class Tanglestash {
         this.successfulChunks = 0;
         this.totalChunkAmount = totalChunkAmount;
 
-        return await this.persistChunkBundle();
+        try {
+            return await this.persistChunkBundle();
+        } catch (err) {
+            throw err;
+        }
     }
 
     async retrieveChunkBundle(chunkTable) {
@@ -98,7 +105,11 @@ class Tanglestash {
             this.retrieveChunk(chunkTable[key], key);
         });
 
-        return await this.finalizeRetrievalOfChunkBundle();
+        try {
+            return await this.finalizeRetrievalOfChunkBundle();
+        } catch (err) {
+            throw err;
+        }
     }
 
     async retrieveChunk(transactionHash, index) {
@@ -204,7 +215,11 @@ class Tanglestash {
             this.persistChunk(this.chunkBundle[chunk]);
         }
 
-        return await this.finalizePersistingOfChunkBundle();
+        try {
+            return await this.finalizePersistingOfChunkBundle();
+        } catch (err) {
+            throw err;
+        }
     }
 
     async persistChunk(chunk) {
