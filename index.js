@@ -370,6 +370,15 @@ class Tanglestash {
         });
     }
 
+    getParentTransactions() {
+        let randomParentTransactionsIndex = Tanglestash.drawRandomNumberBetween(0, (this.potentialParentTransactions.length - 1));
+        let randomParentTransactions = this.potentialParentTransactions[randomParentTransactionsIndex];
+        return ({
+            branchTransaction: randomParentTransactions["branchTransaction"],
+            trunkTransaction: randomParentTransactions["hash"],
+        });
+    }
+
     sendNewIotaTransaction(address, message) {
         return new Promise((resolve, reject) => {
             this.iota.api.sendTransfer(
