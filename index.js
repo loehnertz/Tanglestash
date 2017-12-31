@@ -235,7 +235,7 @@ class Tanglestash {
 
             let trytesMessage = this.iota.utils.toTrytes(JSON.stringify({[this.ChunkContentKey]: chunk["content"]}));
             let address = await this.getNewIotaAddress();
-            let transaction = await this.sendNewIotaTransaction(address, trytesMessage);
+            let transaction = await this.sendTransaction(address, trytesMessage);
 
             Marky.stop('saveToTangle');
 
@@ -303,7 +303,7 @@ class Tanglestash {
 
                 let trytesMessage = this.iota.utils.toTrytes(JSON.stringify(fragment));
                 let address = await this.getNewIotaAddress();
-                let transaction = await this.sendNewIotaTransaction(address, trytesMessage);
+                let transaction = await this.sendTransaction(address, trytesMessage);
 
                 previousHash = transaction["hash"];
             }
@@ -444,6 +444,9 @@ class Tanglestash {
         });
     }
 
+    /**
+     * DEPRECATED
+     */
     sendNewIotaTransaction(address, message) {
         return new Promise((resolve, reject) => {
             this.iota.api.sendTransfer(
