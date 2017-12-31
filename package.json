@@ -1,7 +1,7 @@
 {
   "name": "tanglestash",
-  "version": "1.1.1",
-  "description": "An algorithm to persist any file onto the tangle of IOTA",
+  "version": "1.2.0",
+  "description": "The tangle of IOTA meets BitTorrent: An algorithm to persist any file onto the tangle of IOTA",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -17,12 +17,12 @@
   },
   "homepage": "https://github.com/loehnertz/Tanglestash#readme",
   "keywords": [
-    "dag",
-    "blockchain",
     "iota",
     "tangle",
     "storage",
-    "filesharing"
+    "filesharing",
+    "dag",
+    "blockchain"
   ],
   "dependencies": {
     "crypto-js": "^3.1.9-1",
