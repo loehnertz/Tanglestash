@@ -118,6 +118,8 @@ class Tanglestash {
         Marky.mark('readFromTangle');
 
         try {
+            this.chunkBundle[index] = Tanglestash.buildChunkBundleEntry(null, index);
+
             let failedChunkIndex = this.failedChunks.indexOf(index);
             if (failedChunkIndex !== -1) {
                 this.failedChunks.splice(failedChunkIndex, 1);
@@ -127,7 +129,7 @@ class Tanglestash {
 
             Marky.stop('readFromTangle');
 
-            this.chunkBundle[index] = Tanglestash.buildChunkBundleEntry(chunk[this.ChunkContentKey], index);
+            this.chunkBundle[index]["content"] = chunk[this.ChunkContentKey];
             this.chunkBundle[index]["retrieved"] = true;
             this.successfulChunks += 1;
             return true;
@@ -137,6 +139,8 @@ class Tanglestash {
             if (this.failedChunks.indexOf(index) === -1) {
                 this.failedChunks.push(index);
             }
+
+            console.error(err);
         }
     }
 
@@ -187,8 +191,12 @@ class Tanglestash {
     }
 
     async retrieveJSONFromTransaction(transactionHash) {
-        let transactionBundle = await this.getTransactionFromTangle(transactionHash);
-        return JSON.parse(this.iota.utils.extractJson(transactionBundle));
+        try {
+            let transactionBundle = await this.getTransactionFromTangle(transactionHash);
+            return JSON.parse(this.iota.utils.extractJson(transactionBundle));
+        } catch (err) {
+            throw err;
+        }
     }
 
     getTransactionFromTangle(transactionHash) {
@@ -390,7 +398,7 @@ class Tanglestash {
         let randomParentTransactionsIndex = Tanglestash.drawRandomNumberBetween(0, (this.potentialParentTransactions.length - 1));
         let randomParentTransactions = this.potentialParentTransactions[randomParentTransactionsIndex];
         return ({
-            branchTransaction: randomParentTransactions["branchTransaction"],
+            branchTransaction: randomParentTransactions["hash"],
             trunkTransaction: randomParentTransactions["hash"],
         });
     }
