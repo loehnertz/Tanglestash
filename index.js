@@ -141,7 +141,7 @@ class Tanglestash {
                 this.failedChunks.push(index);
             }
 
-            console.error(err);
+            console.error(err.message, transactionHash, index);
         }
     }
 
@@ -173,7 +173,12 @@ class Tanglestash {
 
         let previousHash = entryHash;
         while (previousHash !== this.FirstChunkKeyword) {
-            let chunkTableFragment = await this.retrieveJSONFromTransaction(previousHash);
+            let chunkTableFragment;
+            try {
+                chunkTableFragment = await this.retrieveJSONFromTransaction(previousHash);
+            } catch (err) {
+                throw err;
+            }
             chunkTableFragments.unshift(chunkTableFragment);
             previousHash = chunkTableFragment[this.PreviousHashKey];
         }
@@ -259,6 +264,8 @@ class Tanglestash {
             if (this.failedChunks.indexOf(chunk["index"]) === -1) {
                 this.failedChunks.push(chunk["index"]);
             }
+
+            console.error(err.message, chunk);
         }
     }
 
