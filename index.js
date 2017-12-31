@@ -435,6 +435,15 @@ class Tanglestash {
         });
     }
 
+    broadcastTransaction(transactionTrytes) {
+        return new Promise((resolve, reject) => {
+            this.iota.api.storeAndBroadcast(transactionTrytes, (err, output) => {
+                if (err) reject(err);
+                resolve(this.iota.utils.transactionObject(transactionTrytes[0]));
+            });
+        });
+    }
+
     sendNewIotaTransaction(address, message) {
         return new Promise((resolve, reject) => {
             this.iota.api.sendTransfer(
