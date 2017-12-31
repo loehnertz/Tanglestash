@@ -4,6 +4,7 @@ const Randomstring = require("randomstring");
 const CryptoJS = require("crypto-js");
 const Marky = require("marky");
 const Iota = require("iota.lib.js");
+const Ccurl = require("ccurl.interface.js");
 
 
 /**
@@ -416,6 +417,21 @@ class Tanglestash {
                     }
                     resolve(bundle[0]);
                 });
+        });
+    }
+
+    attachToTangle(trytes, trunkTransaction, branchTransaction) {
+        return new Promise((resolve, reject) => {
+            Ccurl(
+                trunkTransaction,
+                branchTransaction,
+                this.IotaTransactionMinWeightMagnitude,
+                [trytes],
+                (err, result) => {
+                    if (err) reject(err);
+                    resolve(result);
+                }
+            );
         });
     }
 
