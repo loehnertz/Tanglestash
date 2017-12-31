@@ -9,7 +9,7 @@ const Ccurl = require("ccurl.interface.js");
 
 /**
  * TANGLESTASH
- * An algorithm to persist any file onto the tangle of IOTA
+ * The tangle of IOTA meets BitTorrent: An algorithm to persist any file onto the tangle of IOTA
  * By Jakob Löhnertz (www.jakob.codes)
  * **/
 
