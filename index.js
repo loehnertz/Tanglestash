@@ -84,6 +84,7 @@ class Tanglestash {
         try {
             let datastring = this.encodeData(data, secret);
             let chunkContents = Tanglestash.chopIntoChunks(datastring, this.ChunkContentLength);
+            this.potentialParentTransactions = await this.retrievePotentialParentTransactions();
             this.chunkBundle = Tanglestash.generateChunkBundle(chunkContents);
         } catch (err) {
             throw err;
@@ -358,6 +359,15 @@ class Tanglestash {
         }
 
         return result;
+    }
+
+    async retrievePotentialParentTransactions() {
+        return new Promise((resolve, reject) => {
+            this.iota.api.findTransactionObjects({"tags": [this.ChunkTag]}, (err, results) => {
+                if (err) reject(err);
+                resolve(results);
+            });
+        });
     }
 
     sendNewIotaTransaction(address, message) {
