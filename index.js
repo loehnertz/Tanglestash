@@ -407,7 +407,7 @@ class Tanglestash {
         let randomParentTransactions = this.potentialParentTransactions[randomParentTransactionsIndex];
         return ({
             branchTransaction: randomParentTransactions["hash"],
-            trunkTransaction: randomParentTransactions["hash"],
+            trunkTransaction: randomParentTransactions["trunkTransaction"],
         });
     }
 
