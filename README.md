@@ -4,7 +4,7 @@
 [![npm](https://img.shields.io/npm/dt/tanglestash.svg)](https://www.npmjs.com/package/tanglestash)
 [![daviddm](https://david-dm.org/loehnertz/Tanglestash.svg)](https://david-dm.org/loehnertz/Tanglestash)
 \
-The tangle of IOTA meets BitTorrent: An algorithm to persist any file onto the tangle of IOTA
+IOTA meets BitTorrent: An algorithm to persist any file onto the tangle of IOTA
 
 
 ## Features
@@ -38,6 +38,15 @@ The data can be optionally encrypted with a secret via AES so that even if someo
 gets hold of an 'entry-hash', the data will still be illegible.
 Data is stored as a Base64 string and files will be automatically encoded if passed
 into the algorithm as well as decoded if retrieved – no prior conversion of the file needed.
+
+
+## Disclaimer
+
+I know that both the retrieving and persisting to and from the tangle
+are painfully slow compared to a traditional HTTP connection.
+Keep in mind though that this project is more of a proof-of-concept
+rather than a finished product.\
+Once the PoW of th
 
 
 ## Installation
