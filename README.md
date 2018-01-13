@@ -42,11 +42,9 @@ into the algorithm as well as decoded if retrieved – no prior conversion of th
 
 ## Disclaimer
 
-I know that both the retrieving and persisting to and from the tangle
-are painfully slow compared to a traditional HTTP connection.
-Keep in mind though that this project is more of a proof-of-concept
-rather than a finished product.\
-Once the PoW of th
+I know that mainly the persisting to the tangle is painfully slow compared to a traditional HTTP upload.\
+Keep in mind though that this project is more of a proof-of-concept rather than a finished product.\
+The reason that it takes so long is mainly the current speeds of the PoW, which might get faster in the future with new techniques.
 
 
 ## Installation
@@ -60,6 +58,11 @@ Yarn
 ```
 yarn add tanglestash
 ```
+
+Additionally, one needs [IRI](https://github.com/iotaledger/iri) (the node software) to do the Proof-of-Work for each transaction.\
+One could use a local instance of it or a remote public node that supports PoW e.g. from this list: https://iota.dance/nodes\
+Alternatively, one could utilize the great `iotaproxy` project by [TimSamshuijzen](https://github.com/TimSamshuijzen).\
+Read more about it here: https://github.com/TimSamshuijzen/iotaproxy/blob/master/README.md
 
 
 ## Usage
