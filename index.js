@@ -295,11 +295,11 @@ class Tanglestash {
         try {
             let previousHash = this.FirstChunkKeyword;
             for (let fragment in chunkTableFragments) {
-                fragment = JSON.parse(chunkTableFragments[fragment]);
-                fragment[this.PreviousHashKey] = previousHash;
-                fragment[this.TotalChunkAmountKey] = this.totalChunkAmount;
+                let chunkTableFragment = JSON.parse(chunkTableFragments[fragment]);
+                chunkTableFragment[this.PreviousHashKey] = previousHash;
+                chunkTableFragment[this.TotalChunkAmountKey] = this.totalChunkAmount;
 
-                let trytesMessage = this.iota.utils.toTrytes(JSON.stringify(fragment));
+                let trytesMessage = this.iota.utils.toTrytes(JSON.stringify(chunkTableFragment));
                 let address = await this.getNewIotaAddress();
                 let transaction = await this.sendNewIotaTransaction(address, trytesMessage);
 
@@ -383,7 +383,12 @@ class Tanglestash {
                             reject(new Error(err.message));
                         }
                     }
-                    resolve(bundle[0]);
+
+                    if (bundle) {
+                        resolve(bundle[0]);
+                    } else {
+                        reject(false);
+                    }
                 }
             );
         });
