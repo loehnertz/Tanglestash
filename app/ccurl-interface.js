@@ -30,7 +30,10 @@ class CcurlInterface {
         this.libccurl = libccurl || CcurlInterface.prepareCcurlProvider('.');
     }
 
-    hash() {
+    /**
+     * Launches the needed methods to perform the PoW.
+     */
+    performPoW() {
         return new Promise(async (resolve) => {
             await this.checkInput();
             this.loopTrytes(this.index);
@@ -40,6 +43,9 @@ class CcurlInterface {
         });
     };
 
+    /**
+     * Iterates over the passed trytes to perform the PoW on each of them.
+     */
     loopTrytes() {
         this.getBundleTrytes(this.trytes[this.index]).then(() => {
             this.index++;
@@ -54,13 +60,12 @@ class CcurlInterface {
     }
 
     /**
-     * LOGIC:
+     * Performs the actual PoW.
+     *
+     * Logic:
      * Start with last index transaction
      * Assign it the trunk / branch which the user has supplied
      * If there is a bundle, chain the bundle transactions via trunkTransaction together
-     *
-     * @param singleTryteString A single tryte string from a bundle to perform the PoW on
-     * @returns {Promise}
      */
     getBundleTrytes(singleTryteString) {
         return new Promise((resolve, reject) => {
@@ -98,8 +103,8 @@ class CcurlInterface {
 
                 let newTxObject = this.iota.utils.transactionObject(returnedTrytes);
 
-                // Assign the previousTxHash to this new transaction hash
-                this.previousTxHash = newTxObject.hash;
+                // Assign the previousTxHash to this new transaction performPoW
+                this.previousTxHash = newTxObject.performPoW;
                 // Push the returned trytes to the bundle array
                 this.finalBundleTrytes.push(returnedTrytes);
 
@@ -109,19 +114,19 @@ class CcurlInterface {
     }
 
     /**
-     * Checks the inputs into the class object for correctness
+     * Checks the inputs into the class object for correctness.
      */
     checkInput() {
         if (!this.libccurl.hasOwnProperty("ccurl_pow")) {
             return new Error("Hashing not available");
         }
 
-        // inputValidator: Check if correct hash
+        // inputValidator: Check if correct performPoW
         if (!this.iota.valid.isHash(this.trunkTransaction)) {
             return new Error("Invalid trunkTransaction");
         }
 
-        // inputValidator: Check if correct hash
+        // inputValidator: Check if correct performPoW
         if (!this.iota.valid.isHash(this.branchTransaction)) {
             return new Error("Invalid branchTransaction");
         }
@@ -138,7 +143,7 @@ class CcurlInterface {
     }
 
     /**
-     * Creates an instance of a libccurl object via a dynamic library of it
+     * Creates an instance of a libccurl object via a dynamic library of it.
      *
      * @param ccurlPath The path to the dynamic library
      * @returns {Object} A libccurl object
