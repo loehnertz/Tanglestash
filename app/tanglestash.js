@@ -100,6 +100,10 @@ class Tanglestash {
         }
     }
 
+    /**
+     * Retrieves the single chunks after the Chunk Table got rebuilt.
+     * Also kicks off the method that checks for the state of the retrieval and retries single chunks if needed.
+     */
     async retrieveChunkBundle(chunkTable) {
         Object.keys(chunkTable).forEach(key => {
             this.retrieveChunk(chunkTable[key], key);
@@ -112,6 +116,10 @@ class Tanglestash {
         }
     }
 
+    /**
+     * Retrieves a single chunk via its transaction hash.
+     * In case it fails the index of the chunk will be added to `this.failedChunks` for a later retry.
+     */
     async retrieveChunk(transactionHash, index) {
         Marky.mark('readFromTangle');
 
@@ -143,6 +151,9 @@ class Tanglestash {
         }
     }
 
+    /**
+     * Checks for the state of the retrieval and retries single chunks if needed.
+     */
     finalizeRetrievalOfChunkBundle() {
         return new Promise((resolve, reject) => {
             let finishedCheck = setInterval(async () => {
@@ -165,6 +176,9 @@ class Tanglestash {
         });
     }
 
+    /**
+     * Rebuilds the Chunk Table with the initial Entry Hash.
+     */
     async rebuildChunkTable(entryHash) {
         let chunkTable = {};
         let chunkTableFragments = [];
@@ -194,6 +208,9 @@ class Tanglestash {
         return chunkTable;
     }
 
+    /**
+     * Retrieves JSON from a transaction.
+     */
     async retrieveJSONFromTransaction(transactionHash) {
         try {
             let transactionBundle = await this.getTransactionFromTangle(transactionHash);
@@ -203,6 +220,9 @@ class Tanglestash {
         }
     }
 
+    /**
+     * Actual retrieval of a transaction.
+     */
     getTransactionFromTangle(transactionHash) {
         return new Promise((resolve, reject) => {
             this.iota.api.getBundle(transactionHash, (err, transactionBundle) => {
@@ -224,6 +244,10 @@ class Tanglestash {
         });
     }
 
+    /**
+     * Loops over all the chunks and awaits their success by waiting for the returned transaction hash.
+     * Also kicks off the method that checks for the state of the persisting and retries single chunks if needed.
+     */
     async persistChunkBundle() {
         for (let chunk in this.chunkBundle) {
             await this.persistChunk(this.chunkBundle[chunk]);
@@ -236,6 +260,10 @@ class Tanglestash {
         }
     }
 
+    /**
+     * Persists a single chunk.
+     * In case it fails the index of the chunk will be added to `this.failedChunks` for a later retry.
+     */
     async persistChunk(chunk) {
         Marky.mark('saveToTangle');
 
@@ -267,6 +295,10 @@ class Tanglestash {
         }
     }
 
+    /**
+     * Checks for the state of the persisting and retries single chunks if needed.
+     * Kicks off the persisting of the Chunk Table once every chunk containing content is successfully persisted.
+     */
     async finalizePersistingOfChunkBundle() {
         return new Promise((resolve, reject) => {
             let finishedCheck = setInterval(async () => {
@@ -289,6 +321,9 @@ class Tanglestash {
         });
     }
 
+    /**
+     * Constructs the Chunk Table, chops it up and starts to persist it.
+     */
     async finalizeChunkTable() {
         let chunkTable = this.buildChunkTable();
         let chunkTableFragments = this.chopChunkTable(chunkTable, this.ChunkTableHashAmount);
@@ -299,6 +334,9 @@ class Tanglestash {
         }
     }
 
+    /**
+     * Generates the Chunk Table.
+     */
     buildChunkTable() {
         let chunkTable = {};
         for (let chunk in this.chunkBundle) {
@@ -307,6 +345,9 @@ class Tanglestash {
         return chunkTable;
     }
 
+    /**
+     * Persists the Chunk Table fragments onto the tangle.
+     */
     async persistChunkTable(chunkTableFragments) {
         try {
             let previousHash = this.FirstChunkKeyword;
@@ -326,55 +367,9 @@ class Tanglestash {
         }
     }
 
-    encodeData(data, secret) {
-        let base64 = '';
-        let datastring = '';
-
-        switch (this.datatype) {
-            case 'file':
-                base64 = TanglestashHelpers.parseFileIntoBase64(data);
-                break;
-            case 'string':
-                base64 = TanglestashHelpers.parseStringIntoBase64(data);
-                break;
-            default:
-                throw new TanglestashCustomErrors.IncorrectDatatypeError('No valid "datatype" was passed');
-        }
-
-        if (secret) {
-            datastring = TanglestashHelpers.encrypt(base64, secret);
-        } else {
-            datastring = base64;
-        }
-
-        return datastring;
-    }
-
-    decodeData(data, secret) {
-        let base64 = data;
-        let result = '';
-
-        if (secret) {
-            base64 = TanglestashHelpers.decrypt(base64, secret);
-            if (!base64) {
-                throw new TanglestashCustomErrors.IncorrectPasswordError('Provided secret incorrect');
-            }
-        }
-
-        switch (this.datatype) {
-            case 'file':
-                result = TanglestashHelpers.parseFileFromBase64(base64);
-                break;
-            case 'string':
-                result = TanglestashHelpers.parseStringFromBase64(base64);
-                break;
-            default:
-                throw new TanglestashCustomErrors.IncorrectDatatypeError('No valid "datatype" was passed');
-        }
-
-        return result;
-    }
-
+    /**
+     * Dispatches all the needed steps to send a new transaction.
+     */
     async sendTransaction(address, message) {
         try {
             let parentTransactions = await this.getParentTransactions();
@@ -390,6 +385,9 @@ class Tanglestash {
         }
     }
 
+    /**
+     * Retrieves a `trunkTransaction` as well as a `branchTransaction` via the node for a new transaction.
+     */
     async getParentTransactions() {
         return new Promise((resolve, reject) => {
             this.iota.api.getTransactionsToApprove(this.IotaTransactionDepth, null, (err, transactions) => {
@@ -403,6 +401,9 @@ class Tanglestash {
         });
     }
 
+    /**
+     * Prepares a transaction for the PoW.
+     */
     async prepareTransferTrytes(address, message) {
         return new Promise((resolve, reject) => {
             this.iota.api.prepareTransfers(
@@ -428,6 +429,9 @@ class Tanglestash {
         });
     }
 
+    /**
+     * Launches `ccurl` to perform the PoW on the passed transaction trytes.
+     */
     attachToTangle(trytes, trunkTransaction, branchTransaction) {
         return new Promise((resolve, reject) => {
             new CcurlInterface(
@@ -437,7 +441,7 @@ class Tanglestash {
                 this.IotaTransactionMinWeightMagnitude,
                 this.iota,
                 this.libccurl
-            ).hash().then((result) => {
+            ).performPoW().then((result) => {
                 resolve(result);
             }).catch((err) => {
                 reject(err);
@@ -445,6 +449,9 @@ class Tanglestash {
         });
     }
 
+    /**
+     * Broadcasts a processed transaction onto the tangle via the node.
+     */
     broadcastTransaction(transactionTrytes) {
         return new Promise((resolve, reject) => {
             this.iota.api.storeAndBroadcast(transactionTrytes, (err, output) => {
@@ -452,6 +459,63 @@ class Tanglestash {
                 resolve(this.iota.utils.transactionObject(transactionTrytes[0]));
             });
         });
+    }
+
+    /**
+     * Encodes passed data into Base64.
+     * Optionally encrypts the data with a passed secret.
+     */
+    encodeData(data, secret) {
+        let base64 = '';
+        let datastring = '';
+
+        switch (this.datatype) {
+            case 'file':
+                base64 = TanglestashHelpers.parseFileIntoBase64(data);
+                break;
+            case 'string':
+                base64 = TanglestashHelpers.parseStringIntoBase64(data);
+                break;
+            default:
+                throw new TanglestashCustomErrors.IncorrectDatatypeError('No valid "datatype" was passed');
+        }
+
+        if (secret) {
+            datastring = TanglestashHelpers.encrypt(base64, secret);
+        } else {
+            datastring = base64;
+        }
+
+        return datastring;
+    }
+
+    /**
+     * Decodes passed data into a buffer/string.
+     * Might decrypt the data if a secret is passed.
+     */
+    decodeData(data, secret) {
+        let base64 = data;
+        let result = '';
+
+        if (secret) {
+            base64 = TanglestashHelpers.decrypt(base64, secret);
+            if (!base64) {
+                throw new TanglestashCustomErrors.IncorrectPasswordError('Provided secret incorrect');
+            }
+        }
+
+        switch (this.datatype) {
+            case 'file':
+                result = TanglestashHelpers.parseFileFromBase64(base64);
+                break;
+            case 'string':
+                result = TanglestashHelpers.parseStringFromBase64(base64);
+                break;
+            default:
+                throw new TanglestashCustomErrors.IncorrectDatatypeError('No valid "datatype" was passed');
+        }
+
+        return result;
     }
 
     /**
@@ -477,6 +541,9 @@ class Tanglestash {
         return Marky.getEntries();
     }
 
+    /**
+     * Chops the Chunk Table into fragments respectively chunks as well to fit it into multiple transactions.
+     */
     chopChunkTable(chunkTable, hashesPerChunk) {
         let chunkIndex = -1;
         let chunkTableChunks = [];
@@ -490,11 +557,17 @@ class Tanglestash {
         return chunkTableChunks;
     }
 
+    /**
+     * Chops up data into a passed chunk length.
+     */
     static chopIntoChunks(datastring, chunkLength) {
         let regex = new RegExp(`.{1,${chunkLength}}`, 'g');
         return datastring.match(regex);
     }
 
+    /**
+     * Constructs the bundle of all the chunks containing the content.
+     */
     static generateChunkBundle(chunkContents) {
         let bundle = {};
         for (let chunkContent in chunkContents) {
@@ -503,6 +576,9 @@ class Tanglestash {
         return bundle;
     }
 
+    /**
+     * Generates an entry of a bundle of chunks.
+     */
     static buildChunkBundleEntry(chunkContent, index) {
         return ({
             content: chunkContent,
