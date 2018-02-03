@@ -1,6 +1,7 @@
 const Fs = require("fs");
 const Path = require("path");
 
+const Randomstring = require("randomstring");
 const CryptoJS = require("crypto-js");
 
 
@@ -8,6 +9,16 @@ const CryptoJS = require("crypto-js");
  * Helper methods for the main class
  */
 class TanglestashHelpers {
+    static IotaSeedLength = 81;
+    static IotaCharset = '9ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+    static generateRandomIotaSeed() {
+        return Randomstring.generate({
+            length: TanglestashHelpers.IotaSeedLength,
+            charset: TanglestashHelpers.IotaCharset,
+        });
+    }
+
     static parseFileIntoBase64(path) {
         let buffer = new Buffer(Fs.readFileSync(Path.resolve(path)));
         return buffer.toString('base64');

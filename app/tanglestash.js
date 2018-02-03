@@ -1,11 +1,10 @@
 const Path = require("path");
 
-const Randomstring = require("randomstring");
 const Marky = require("marky");
 const Iota = require("iota.lib.js");
 
 const TanglestashCustomErrors = require('./custom-errors');
-const TanglestashHelpers = require('./helpers');
+const TanglestashHelpers = require('./tanglestash-helpers');
 const CcurlInterface = require("./ccurl-interface");
 
 
@@ -25,8 +24,6 @@ class Tanglestash {
         // CONSTANTS
         this.IotaTransactionDepth = 3;
         this.IotaTransactionMinWeightMagnitude = 14;
-        this.IotaSeedLength = 81;
-        this.IotaCharset = '9ABCDEFGHIJKLMNOPQRSTUVWXYZ';
         this.IotaTransactionSignatureMessageFragmentLength = 2187;
         this.ChunkPaddingLength = 19;
         this.ChunkTablePreviousHashLength = 109;
@@ -42,7 +39,7 @@ class Tanglestash {
         this.iota = new Iota({'provider': provider});  // Create IOTA instance utilizing the passed provider
         this.libccurl = CcurlInterface.prepareCcurlProvider(Path.resolve('./lib/libccurl'));
         this.datatype = datatype || 'file';  // Set file as the default 'datatype' in case none was passed
-        this.seed = seed || this.generateRandomIotaSeed();  // Generate a fresh and random IOTA seed
+        this.seed = seed || TanglestashHelpers.generateRandomIotaSeed();  // Generate a fresh and random IOTA seed
         this.successfulChunks = 0;
         this.totalChunkAmount = 0;
         this.chunkBundle = {};
@@ -454,18 +451,6 @@ class Tanglestash {
                 if (err) reject(err);
                 resolve(this.iota.utils.transactionObject(transactionTrytes[0]));
             });
-        });
-    }
-
-    /**
-     * Generates a random valid IOTA wallet seed.
-     *
-     * @returns {String} The generated seed
-     */
-    generateRandomIotaSeed() {
-        return Randomstring.generate({
-            length: this.IotaSeedLength,
-            charset: this.IotaCharset,
         });
     }
 
