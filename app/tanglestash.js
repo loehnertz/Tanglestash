@@ -22,8 +22,8 @@ class Tanglestash {
      */
     constructor(provider, datatype, seed) {
         // CONSTANTS
-        this.IotaTransactionDepth = 4;
-        this.IotaTransactionMinWeightMagnitude = 14;
+        this.IotaTransactionDepth = 3;
+        this.IotaTransactionMinWeightMagnitude = 15;
         this.IotaTransactionSignatureMessageFragmentLength = 2187;
         this.ChunkPaddingLength = 19;
         this.ChunkTablePreviousHashLength = 109;
@@ -37,7 +37,7 @@ class Tanglestash {
 
         // PROPERTIES
         this.iota = new Iota({'provider': provider});  // Create IOTA instance utilizing the passed provider
-        this.libccurl = CcurlInterface.prepareCcurlProvider(Path.resolve('./lib/libccurl'));
+        this.libccurl = CcurlInterface.prepareCcurlProvider(Path.resolve('./lib/libccurl'));  // Creates an instance of libccurl to perform the PoW
         this.datatype = datatype || 'file';  // Set file as the default 'datatype' in case none was passed
         this.seed = seed || TanglestashHelpers.generateRandomIotaSeed();  // Generate a fresh and random IOTA seed
         this.successfulChunks = 0;
