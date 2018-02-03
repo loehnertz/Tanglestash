@@ -12,7 +12,7 @@ const CcurlInterface = require('./ccurl-interface');
  * TANGLESTASH
  * IOTA meets BitTorrent: An algorithm to persist any file onto the tangle of IOTA
  * By Jakob Löhnertz (www.jakob.codes)
- * **/
+ **/
 
 class Tanglestash {
     /**
@@ -22,8 +22,8 @@ class Tanglestash {
      */
     constructor(provider, datatype, seed) {
         // CONSTANTS
-        this.IotaTransactionDepth = 3;
-        this.IotaTransactionMinWeightMagnitude = 15;
+        this.IotaTransactionDepth = 4;
+        this.IotaTransactionMinWeightMagnitude = 14;
         this.IotaTransactionSignatureMessageFragmentLength = 2187;
         this.ChunkPaddingLength = 19;
         this.ChunkTablePreviousHashLength = 109;
@@ -393,7 +393,8 @@ class Tanglestash {
     async getParentTransactions() {
         return new Promise((resolve, reject) => {
             this.iota.api.getTransactionsToApprove(this.IotaTransactionDepth, null, (err, transactions) => {
-                if (err || !transactions) reject(err);
+                if (err) reject(err);
+                if (!transactions) reject(new TanglestashCustomErrors.NodeCouldNotProvideTransactionsToApproveError());
                 resolve({
                     trunkTransaction: transactions.trunkTransaction,
                     branchTransaction: transactions.branchTransaction,
@@ -432,8 +433,8 @@ class Tanglestash {
             new CcurlInterface(
                 trunkTransaction,
                 branchTransaction,
-                this.IotaTransactionMinWeightMagnitude,
                 trytes,
+                this.IotaTransactionMinWeightMagnitude,
                 this.iota,
                 this.libccurl
             ).hash().then((result) => {
