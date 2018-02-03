@@ -90,9 +90,8 @@ class Tanglestash {
             throw err;
         }
 
-        let totalChunkAmount = parseInt(Object.keys(this.chunkBundle).length);
         this.successfulChunks = 0;
-        this.totalChunkAmount = totalChunkAmount;
+        this.totalChunkAmount = parseInt(Object.keys(this.chunkBundle).length);
 
         try {
             return await this.persistChunkBundle();
@@ -140,7 +139,7 @@ class Tanglestash {
                 this.failedChunks.push(index);
             }
 
-            console.error(err.message, transactionHash, index);
+            console.warn(err.message, transactionHash, index);
         }
     }
 
@@ -264,7 +263,7 @@ class Tanglestash {
                 this.failedChunks.push(chunk["index"]);
             }
 
-            console.error(err.message, chunk);
+            console.warn(err.message, chunk);
         }
     }
 
