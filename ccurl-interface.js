@@ -136,6 +136,40 @@ class CcurlInterface {
             return new Error("Invalid trytes supplied");
         }
     }
+
+    /**
+     * Creates an instance of a libccurl object via a dynamic library of it
+     *
+     * @param ccurlPath The path to the dynamic library
+     * @returns {Object} A libccurl object
+     */
+    static prepareCcurlProvider(ccurlPath) {
+        if (!ccurlPath) {
+            throw new Error("Path to ccurl is mandatory!");
+        }
+
+        let fullPath = ccurlPath + '/libccurl';
+
+        try {
+            let libccurl = Ffi.Library(fullPath, {
+                ccurl_pow: ['string', ['string', 'int']],
+                ccurl_pow_finalize: ['void', []],
+                ccurl_pow_interrupt: ['void', []]
+            });
+
+            if (!libccurl.hasOwnProperty("ccurl_pow") ||
+                !libccurl.hasOwnProperty("ccurl_pow_finalize") ||
+                !libccurl.hasOwnProperty("ccurl_pow_interrupt")
+            ) {
+                throw new Error("Could not load hashing library.");
+            }
+
+            return libccurl;
+        } catch (err) {
+            console.error(err.message);
+            throw err;
+        }
+    }
 }
 
 
