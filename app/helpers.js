@@ -1,8 +1,12 @@
 const Fs = require("fs");
 const Path = require("path");
+
 const CryptoJS = require("crypto-js");
 
 
+/**
+ * Helper methods for the main class
+ */
 class TanglestashHelpers {
     static parseFileIntoBase64(path) {
         let buffer = new Buffer(Fs.readFileSync(Path.resolve(path)));
@@ -35,5 +39,6 @@ class TanglestashHelpers {
         }
     }
 }
+
 
 module.exports = TanglestashHelpers;
