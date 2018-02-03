@@ -117,28 +117,29 @@ class CcurlInterface {
      * Checks the inputs into the class object for correctness.
      */
     checkInput() {
-        if (!this.libccurl.hasOwnProperty("ccurl_pow")) {
-            return new Error("Hashing not available");
+        // Check if `libccurl` is available
+        if (!this.libccurl.hasOwnProperty('ccurl_pow')) {
+            return new Error('Hashing not available');
         }
 
-        // inputValidator: Check if correct performPoW
+        // Check if valid `trunkTransaction` was passed
         if (!this.iota.valid.isHash(this.trunkTransaction)) {
-            return new Error("Invalid trunkTransaction");
+            return new Error('Invalid trunkTransaction');
         }
 
-        // inputValidator: Check if correct performPoW
+        // Check if valid `branchTransaction` was passed
         if (!this.iota.valid.isHash(this.branchTransaction)) {
-            return new Error("Invalid branchTransaction");
+            return new Error('Invalid branchTransaction');
         }
 
-        // inputValidator: Check if int
+        // Check if a valid `minWeightMagnitude` was passed
         if (!this.iota.valid.isValue(this.minWeightMagnitude)) {
-            return new Error("Invalid minWeightMagnitude");
+            return new Error('Invalid minWeightMagnitude');
         }
 
-        //inputValidator: Check if array of trytes
+        // Check if the passed trytes are valid
         if (!this.iota.valid.isArrayOfTrytes(this.trytes)) {
-            return new Error("Invalid trytes supplied");
+            return new Error('Invalid trytes supplied');
         }
     }
 
