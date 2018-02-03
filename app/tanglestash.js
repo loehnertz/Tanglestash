@@ -230,7 +230,6 @@ class Tanglestash {
 
     async persistChunkBundle() {
         for (let chunk in this.chunkBundle) {
-            console.log(this.successfulChunks, this.totalChunkAmount, this.failedChunks);
             await this.persistChunk(this.chunkBundle[chunk]);
         }
 
@@ -283,7 +282,6 @@ class Tanglestash {
                         reject(err);
                     }
                 } else {
-                    console.log(this.successfulChunks, this.totalChunkAmount, this.failedChunks);
                     for (let chunk in this.failedChunks) {
                         let failedChunk = this.chunkBundle[this.failedChunks[chunk]];
                         if (!failedChunk["persisted"]) {
