@@ -51,7 +51,7 @@ class CcurlInterface {
                 this.loopTrytes();
             }
         }).catch((err) => {
-            throw err;
+            throw new TanglestashCustomErrors.TryteLoopingError(err.message);
         });
     }
 

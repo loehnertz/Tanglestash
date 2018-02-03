@@ -37,6 +37,13 @@ class LibccurlCreationError extends Error {
     }
 }
 
+class TryteLoopingError extends Error {
+    constructor(...args) {
+        super(...args);
+        this.name = TryteLoopingError.name;
+    }
+}
+
 
 module.exports = {
     IncorrectPasswordError,
@@ -44,4 +51,5 @@ module.exports = {
     IncorrectTransactionHashError,
     NodeOutdatedError,
     LibccurlCreationError,
+    TryteLoopingError,
 };
