@@ -1,4 +1,6 @@
+const Os = require('os');
 const Path = require('path');
+const Cluster = require('cluster');
 
 const Marky = require('marky');
 const Iota = require('iota.lib.js');
@@ -22,6 +24,7 @@ class Tanglestash {
      */
     constructor(provider, datatype, seed) {
         // CONSTANTS
+        this.NumWorkers = Os.cpus().length;
         this.IotaTransactionDepth = 4;
         this.IotaTransactionMinWeightMagnitude = 14;
         this.IotaTransactionSignatureMessageFragmentLength = 2187;
@@ -94,6 +97,7 @@ class Tanglestash {
         this.totalChunkAmount = parseInt(Object.keys(this.chunkBundle).length);
 
         try {
+            await this.setupWorkers();
             return await this.persistChunkBundle();
         } catch (err) {
             throw err;
@@ -487,6 +491,28 @@ class Tanglestash {
             chunkTableChunks[chunkIndex][key] = chunkTable[key];
         });
         return chunkTableChunks;
+    }
+
+    setupWorkers() {
+        return new Promise((resolve) => {
+            if (Cluster.isMaster) {
+                console.log('Master cluster setting up ' + this.NumWorkers + ' workers...');
+
+                for (let i = 0; i < this.NumWorkers; i++) {
+                    Cluster.fork();
+                }
+
+                Cluster.on('online', (worker) => {
+                    console.log(`Worker ${worker.process.pid} is online!`);
+                    resolve();
+                });
+
+                Cluster.on('exit', (worker, code, signal) => {
+                    console.log(`Worker ${worker.process.pid} died with code: ${code} and signal: ${signal}. Restarting...`);
+                    Cluster.fork();
+                });
+            }
+        });
     }
 
     static chopIntoChunks(datastring, chunkLength) {
