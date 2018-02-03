@@ -526,6 +526,19 @@ class Tanglestash {
         return Marky.getEntries();
     }
 
+    chopChunkTable(chunkTable, hashesPerChunk) {
+        let chunkIndex = -1;
+        let chunkTableChunks = [];
+        Object.keys(chunkTable).forEach((key, index) => {
+            if (index == 0 || index % hashesPerChunk === 0) {
+                chunkTableChunks.push({});
+                chunkIndex++;
+            }
+            chunkTableChunks[chunkIndex][key] = chunkTable[key];
+        });
+        return chunkTableChunks;
+    }
+
     static chopIntoChunks(datastring, chunkLength) {
         let regex = new RegExp(`.{1,${chunkLength}}`, 'g');
         return datastring.match(regex);
