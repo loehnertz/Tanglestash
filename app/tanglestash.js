@@ -458,38 +458,6 @@ class Tanglestash {
     }
 
     /**
-     * DEPRECATED
-     */
-    sendNewIotaTransaction(address, message) {
-        return new Promise((resolve, reject) => {
-            this.iota.api.sendTransfer(
-                this.seed,
-                this.IotaTransactionDepth,
-                this.IotaTransactionMinWeightMagnitude,
-                [
-                    {
-                        'address': address,
-                        'message': message,
-                        'tag': this.ChunkTag,
-                        'value': 0,
-                    }
-                ],
-                (err, bundle) => {
-                    // TODO: Check why this sometimes doesn't reject correctly (if node is outdated)
-                    if (err) {
-                        if (err.message.includes('failed consistency check')) {
-                            reject(new TanglestashCustomErrors.NodeOutdatedError(err.message));
-                        } else {
-                            reject(new Error(err.message));
-                        }
-                    }
-                    resolve(bundle[0]);
-                }
-            );
-        });
-    }
-
-    /**
      * Generates a random valid IOTA wallet seed.
      *
      * @returns {String} The generated seed
