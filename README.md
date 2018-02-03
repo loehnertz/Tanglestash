@@ -46,6 +46,8 @@ I know that primarily the persisting to the tangle is painfully slow compared to
 Keep in mind though that this project is more of a proof-of-concept rather than a finished product.\
 The reason that it takes so long is mainly the current speed of the PoW, which might get faster in the future with new techniques.
 
+**Additionally, it is important to note that this module just works with Node.js version 8 owing to the fact that a dependency is currently not functioning under version 9.**
+
 
 ## Installation
 
