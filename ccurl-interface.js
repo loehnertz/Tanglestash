@@ -41,6 +41,17 @@ class CcurlInterface {
             }, 123);
         });
     };
+
+    loopTrytes() {
+        this.getBundleTrytes(this.trytes[this.index]).then(() => {
+            this.index++;
+            if (this.index < this.trytes.length) {
+                this.loopTrytes();
+            }
+        }).catch((err) => {
+            throw err;
+        });
+    }
 }
 
 
