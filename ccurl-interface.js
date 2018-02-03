@@ -25,6 +25,22 @@ class CcurlInterface {
         this.iota = iotaProvider;
         this.libccurl = libccurl || CcurlInterface.prepareCcurlProvider('.');
     }
+
+    hash() {
+        return new Promise(async (resolve, reject) => {
+            await this.checkInput();
+            try {
+                this.loopTrytes(this.index);
+            } catch (err) {
+                reject(err);
+            }
+            setInterval(() => {
+                if (this.index >= this.trytes.length) {
+                    resolve(this.finalBundleTrytes.reverse());
+                }
+            }, 123);
+        });
+    };
 }
 
 
