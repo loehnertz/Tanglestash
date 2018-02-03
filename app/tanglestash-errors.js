@@ -30,10 +30,18 @@ class NodeOutdatedError extends Error {
     }
 }
 
+class LibccurlCreationError extends Error {
+    constructor(...args) {
+        super(...args);
+        this.name = LibccurlCreationError.name;
+    }
+}
+
 
 module.exports = {
     IncorrectPasswordError,
     IncorrectDatatypeError,
     IncorrectTransactionHashError,
     NodeOutdatedError,
+    LibccurlCreationError,
 };

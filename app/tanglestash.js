@@ -3,7 +3,7 @@ const Path = require('path');
 const Marky = require('marky');
 const Iota = require('iota.lib.js');
 
-const TanglestashCustomErrors = require('./custom-errors');
+const TanglestashCustomErrors = require('./tanglestash-errors');
 const TanglestashHelpers = require('./tanglestash-helpers');
 const CcurlInterface = require('./ccurl-interface');
 

@@ -8,6 +8,8 @@
 
 const Ffi = require('ffi');
 
+const TanglestashCustomErrors = require('./tanglestash-errors');
+
 
 class CcurlInterface {
     constructor(trunkTransaction, branchTransaction, minWeightMagnitude, trytes, iotaProvider, libccurl) {
@@ -166,8 +168,7 @@ class CcurlInterface {
 
             return libccurl;
         } catch (err) {
-            console.error(err.message);
-            throw err;
+            throw new TanglestashCustomErrors.LibccurlCreationError(err.message);
         }
     }
 }
