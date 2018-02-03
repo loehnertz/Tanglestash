@@ -95,7 +95,7 @@ class CcurlInterface {
                 if (err) {
                     reject(err);
                 } else if (!returnedTrytes) {
-                    reject(new Error("The PoW was involuntarily interrupted"));
+                    reject(new TanglestashCustomErrors.LibccurlInterruptionError());
                 }
 
                 let newTxObject = this.iota.utils.transactionObject(returnedTrytes);

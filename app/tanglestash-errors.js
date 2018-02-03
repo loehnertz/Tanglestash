@@ -44,6 +44,13 @@ class TryteLoopingError extends Error {
     }
 }
 
+class LibccurlInterruptionError extends Error {
+    constructor(...args) {
+        super(...args);
+        this.name = LibccurlInterruptionError.name;
+    }
+}
+
 
 module.exports = {
     IncorrectPasswordError,
@@ -52,4 +59,5 @@ module.exports = {
     NodeOutdatedError,
     LibccurlCreationError,
     TryteLoopingError,
+    LibccurlInterruptionError,
 };
