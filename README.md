@@ -114,21 +114,6 @@ tanglestash.saveToTangle(data, secret)
 
 ---
 
-### `generateRandomIotaSeed`
-
-Generates a random valid IOTA wallet seed.
-
-#### Input
-```js
-tanglestash.generateRandomIotaSeed()
-```
-
-#### Return Value
-
-1. **`String`** - The generated seed
-
----
-
 ### `getNewIotaAddress`
 
 Retrieves a new valid IOTA wallet address based on `this.seed`.
