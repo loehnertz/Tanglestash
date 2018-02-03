@@ -168,4 +168,5 @@ If you like this module and want to support it, you can of course donate some IO
 
 ## License
 
-[MIT](LICENSE)
+This project is licensed under the [MIT license](LICENSE).\
+The included [dynamic libraries](lib/libccurl) are compiled from the [ccurl](https://github.com/iotaledger/ccurl) repository licensed under [MIT license](https://github.com/iotaledger/ccurl/blob/master/LICENSE).
