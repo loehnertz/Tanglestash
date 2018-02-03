@@ -107,6 +107,35 @@ class CcurlInterface {
             });
         });
     }
+
+    /**
+     * Checks the inputs into the class object for correctness
+     */
+    checkInput() {
+        if (!this.libccurl.hasOwnProperty("ccurl_pow")) {
+            return new Error("Hashing not available");
+        }
+
+        // inputValidator: Check if correct hash
+        if (!this.iota.valid.isHash(this.trunkTransaction)) {
+            return new Error("Invalid trunkTransaction");
+        }
+
+        // inputValidator: Check if correct hash
+        if (!this.iota.valid.isHash(this.branchTransaction)) {
+            return new Error("Invalid branchTransaction");
+        }
+
+        // inputValidator: Check if int
+        if (!this.iota.valid.isValue(this.minWeightMagnitude)) {
+            return new Error("Invalid minWeightMagnitude");
+        }
+
+        //inputValidator: Check if array of trytes
+        if (!this.iota.valid.isArrayOfTrytes(this.trytes)) {
+            return new Error("Invalid trytes supplied");
+        }
+    }
 }
 
 
