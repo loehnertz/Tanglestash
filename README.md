@@ -37,14 +37,19 @@ just passing the 'entry-hash' into it, which is the first transaction hash of th
 The data can be optionally encrypted with a secret via AES so that even if someone
 gets hold of an 'entry-hash', the data will still be illegible.
 Data is stored as a Base64 string and files will be automatically encoded if passed
-into the algorithm as well as decoded if retrieved – no prior conversion of the file needed.
+into the algorithm as well as decoded if retrieved – no prior conversion of the file needed.\
+Here is a diagram of the data structure I came with for this project:\
+\
+![Diagram of the data structure](https://i.imgur.com/eDF7FxS.png)
 
 
 ## Disclaimer
 
-I know that mainly the persisting to the tangle is painfully slow compared to a traditional HTTP upload.\
+I know that primarily the persisting to the tangle is painfully slow compared to a traditional HTTP upload.\
 Keep in mind though that this project is more of a proof-of-concept rather than a finished product.\
-The reason that it takes so long is mainly the current speeds of the PoW, which might get faster in the future with new techniques.
+The reason that it takes so long is mainly the current speed of the PoW, which might get faster in the future with new techniques.
+
+**Additionally, it is important to note that this module just works with Node.js version 8 owing to the fact that a dependency is currently not functioning under version 9.**
 
 
 ## Installation
@@ -60,7 +65,7 @@ yarn add tanglestash
 ```
 
 Additionally, one needs [IRI](https://github.com/iotaledger/iri) (the node software) to do the Proof-of-Work for each transaction.\
-One could use a local instance of it or a remote public node that supports PoW e.g. from this list: https://iota.dance/nodes\
+One could use a local instance of it or a remote public node that supports PoW e.g. from this list: https://iota.dance/nodes \
 Alternatively, one could utilize the great `iotaproxy` project by [TimSamshuijzen](https://github.com/TimSamshuijzen).\
 Read more about it here: https://github.com/TimSamshuijzen/iotaproxy/blob/master/README.md
 
@@ -160,12 +165,13 @@ tanglestash.getAllMarkyEntries()
 1. **`Array.<object>`** - All the timing entries created by `marky`
 
 
+## License
+
+This project is licensed under the [MIT license](LICENSE).\
+The included [dynamic libraries](lib/libccurl) are compiled from the [ccurl](https://github.com/iotaledger/ccurl) repository licensed under [MIT license](https://github.com/iotaledger/ccurl/blob/master/LICENSE).
+
+
 ## Donations
 
 If you like this module and want to support it, you can of course donate some IOTA 😊 \
 `QIFKUOEQBCEV9NKFWDBTQYBHLFFORLVKDQSYDSZQQMKTCBLBFDQMJWIOUDH9DLZXVKGNQGKLSAJCQQMEDESLCTHGZD`
-
-
-## License
-
-[MIT](LICENSE)
