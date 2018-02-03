@@ -162,13 +162,13 @@ tanglestash.getAllMarkyEntries()
 1. **`Array.<object>`** - All the timing entries created by `marky`
 
 
-## Donations
-
-If you like this module and want to support it, you can of course donate some IOTA 😊 \
-`QIFKUOEQBCEV9NKFWDBTQYBHLFFORLVKDQSYDSZQQMKTCBLBFDQMJWIOUDH9DLZXVKGNQGKLSAJCQQMEDESLCTHGZD`
-
-
 ## License
 
 This project is licensed under the [MIT license](LICENSE).\
 The included [dynamic libraries](lib/libccurl) are compiled from the [ccurl](https://github.com/iotaledger/ccurl) repository licensed under [MIT license](https://github.com/iotaledger/ccurl/blob/master/LICENSE).
+
+
+## Donations
+
+If you like this module and want to support it, you can of course donate some IOTA 😊 \
+`QIFKUOEQBCEV9NKFWDBTQYBHLFFORLVKDQSYDSZQQMKTCBLBFDQMJWIOUDH9DLZXVKGNQGKLSAJCQQMEDESLCTHGZD`
