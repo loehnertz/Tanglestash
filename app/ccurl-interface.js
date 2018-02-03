@@ -13,7 +13,7 @@ const TanglestashCustomErrors = require('./tanglestash-errors');
 
 
 class CcurlInterface {
-    constructor(trunkTransaction, branchTransaction, minWeightMagnitude, trytes, iotaProvider, libccurl) {
+    constructor(trunkTransaction, branchTransaction, trytes, minWeightMagnitude, iotaProvider, libccurl) {
         // CONSTANTS
         this.MAX_TIMESTAMP_VALUE = (Math.pow(3, 27) - 1) / 2;
 
@@ -22,6 +22,7 @@ class CcurlInterface {
         this.branchTransaction = branchTransaction;
         this.minWeightMagnitude = minWeightMagnitude;
         this.trytes = trytes;
+        this.finishedPoW = false;
         this.index = 0;
         this.previousTxHash = null;
         this.finalBundleTrytes = [];
@@ -30,17 +31,11 @@ class CcurlInterface {
     }
 
     hash() {
-        return new Promise(async (resolve, reject) => {
+        return new Promise(async (resolve) => {
             await this.checkInput();
-            try {
-                this.loopTrytes(this.index);
-            } catch (err) {
-                reject(err);
-            }
+            this.loopTrytes(this.index);
             setInterval(() => {
-                if (this.index >= this.trytes.length) {
-                    resolve(this.finalBundleTrytes.reverse());
-                }
+                if (this.finishedPoW) resolve(this.finalBundleTrytes.reverse());
             }, 123);
         });
     };
@@ -50,6 +45,8 @@ class CcurlInterface {
             this.index++;
             if (this.index < this.trytes.length) {
                 this.loopTrytes();
+            } else {
+                this.finishedPoW = true;
             }
         }).catch((err) => {
             throw new TanglestashCustomErrors.TryteLoopingError(err.message);
@@ -79,7 +76,7 @@ class CcurlInterface {
             if (!this.previousTxHash) {
                 // Check if last transaction in the bundle
                 if (txObject.lastIndex !== txObject.currentIndex) {
-                    return new Error("Wrong bundle order. The bundle should be ordered in descending order from currentIndex");
+                    return new Error('Wrong bundle order. The bundle should be ordered in descending order from currentIndex');
                 }
 
                 txObject.trunkTransaction = this.trunkTransaction;
@@ -96,7 +93,7 @@ class CcurlInterface {
                 if (err) {
                     reject(err);
                 } else if (!returnedTrytes) {
-                    reject(new TanglestashCustomErrors.LibccurlInterruptionError());
+                    reject(new TanglestashCustomErrors.LibccurlInterruptionError('PoW failed!'));
                 }
 
                 let newTxObject = this.iota.utils.transactionObject(returnedTrytes);
