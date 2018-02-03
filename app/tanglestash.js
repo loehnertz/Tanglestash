@@ -59,7 +59,9 @@ class Tanglestash {
     async readFromTangle(entryHash, secret) {
         try {
             let chunkTable = await this.rebuildChunkTable(entryHash);
+            console.log('Chunk Table successfully rebuilt!');
             this.chunkBundle = await this.retrieveChunkBundle(chunkTable);
+            console.log('Chunks successfully retrieved!');
         } catch (err) {
             throw err;
         }
@@ -89,6 +91,7 @@ class Tanglestash {
             let datastring = this.encodeData(data, secret);
             let chunkContents = Tanglestash.chopIntoChunks(datastring, this.ChunkContentLength);
             this.chunkBundle = Tanglestash.generateChunkBundle(chunkContents);
+            console.log('Chunk Table successfully generated!');
         } catch (err) {
             throw err;
         }
@@ -98,6 +101,7 @@ class Tanglestash {
 
         try {
             await this.setupWorkers();
+            console.log('Worker setup successfully completed!');
             return await this.persistChunkBundle();
         } catch (err) {
             throw err;
