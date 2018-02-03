@@ -1,8 +1,8 @@
-const Fs = require("fs");
-const Path = require("path");
+const Fs = require('fs');
+const Path = require('path');
 
-const Randomstring = require("randomstring");
-const CryptoJS = require("crypto-js");
+const Randomstring = require('randomstring');
+const CryptoJS = require('crypto-js');
 
 
 /**

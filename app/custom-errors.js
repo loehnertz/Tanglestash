@@ -1,6 +1,6 @@
 /**
  * Custom Errors
- * **/
+ */
 
 class IncorrectPasswordError extends Error {
     constructor(...args) {
@@ -9,10 +9,10 @@ class IncorrectPasswordError extends Error {
     }
 }
 
-class IncorrentDatatypeError extends Error {
+class IncorrectDatatypeError extends Error {
     constructor(...args) {
         super(...args);
-        this.name = IncorrentDatatypeError.name;
+        this.name = IncorrectDatatypeError.name;
     }
 }
 
@@ -33,7 +33,7 @@ class NodeOutdatedError extends Error {
 
 module.exports = {
     IncorrectPasswordError,
-    IncorrentDatatypeError,
+    IncorrectDatatypeError,
     IncorrectTransactionHashError,
     NodeOutdatedError,
 };

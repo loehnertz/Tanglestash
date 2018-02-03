@@ -1,11 +1,11 @@
-const Path = require("path");
+const Path = require('path');
 
-const Marky = require("marky");
-const Iota = require("iota.lib.js");
+const Marky = require('marky');
+const Iota = require('iota.lib.js');
 
 const TanglestashCustomErrors = require('./custom-errors');
 const TanglestashHelpers = require('./tanglestash-helpers');
-const CcurlInterface = require("./ccurl-interface");
+const CcurlInterface = require('./ccurl-interface');
 
 
 /**
@@ -339,7 +339,7 @@ class Tanglestash {
                 base64 = TanglestashHelpers.parseStringIntoBase64(data);
                 break;
             default:
-                throw new TanglestashCustomErrors.IncorrentDatatypeError('No correct "datatype" was passed');
+                throw new TanglestashCustomErrors.IncorrectDatatypeError('No valid "datatype" was passed');
         }
 
         if (secret) {
@@ -370,7 +370,7 @@ class Tanglestash {
                 result = TanglestashHelpers.parseStringFromBase64(base64);
                 break;
             default:
-                throw new TanglestashCustomErrors.IncorrentDatatypeError('No correct "datatype" was passed');
+                throw new TanglestashCustomErrors.IncorrectDatatypeError('No valid "datatype" was passed');
         }
 
         return result;
