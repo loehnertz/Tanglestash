@@ -1,7 +1,7 @@
 {
   "name": "tanglestash",
-  "version": "1.2.0",
-  "description": "The tangle of IOTA meets BitTorrent: An algorithm to persist any file onto the tangle of IOTA",
+  "version": "3.0.0",
+  "description": "IOTA meets BitTorrent: An algorithm to persist any file onto the tangle of IOTA",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
