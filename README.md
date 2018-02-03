@@ -37,7 +37,10 @@ just passing the 'entry-hash' into it, which is the first transaction hash of th
 The data can be optionally encrypted with a secret via AES so that even if someone
 gets hold of an 'entry-hash', the data will still be illegible.
 Data is stored as a Base64 string and files will be automatically encoded if passed
-into the algorithm as well as decoded if retrieved – no prior conversion of the file needed.
+into the algorithm as well as decoded if retrieved – no prior conversion of the file needed.\
+Here is a diagram of the data structure I came with for this project:\
+\
+![Diagram of the data structure](https://i.imgur.com/eDF7FxS.png)
 
 
 ## Disclaimer
