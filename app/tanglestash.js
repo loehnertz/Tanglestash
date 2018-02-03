@@ -22,7 +22,7 @@ class Tanglestash {
      */
     constructor(provider, datatype, seed) {
         // CONSTANTS
-        this.IotaTransactionDepth = 3;
+        this.IotaTransactionDepth = 4;
         this.IotaTransactionMinWeightMagnitude = 14;
         this.IotaTransactionSignatureMessageFragmentLength = 2187;
         this.ChunkPaddingLength = 19;
