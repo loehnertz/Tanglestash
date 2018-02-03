@@ -63,11 +63,6 @@ Yarn
 yarn add tanglestash
 ```
 
-Additionally, one needs [IRI](https://github.com/iotaledger/iri) (the node software) to do the Proof-of-Work for each transaction.\
-One could use a local instance of it or a remote public node that supports PoW e.g. from this list: https://iota.dance/nodes \
-Alternatively, one could utilize the great `iotaproxy` project by [TimSamshuijzen](https://github.com/TimSamshuijzen).\
-Read more about it here: https://github.com/TimSamshuijzen/iotaproxy/blob/master/README.md
-
 
 ## Usage
 
