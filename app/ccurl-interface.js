@@ -103,8 +103,8 @@ class CcurlInterface {
 
                 let newTxObject = this.iota.utils.transactionObject(returnedTrytes);
 
-                // Assign the previousTxHash to this new transaction performPoW
-                this.previousTxHash = newTxObject.performPoW;
+                // Assign the previousTxHash to this new transaction hash
+                this.previousTxHash = newTxObject.hash;
                 // Push the returned trytes to the bundle array
                 this.finalBundleTrytes.push(returnedTrytes);
 
