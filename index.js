@@ -1,15 +1,17 @@
-const Fs = require("fs");
 const Path = require("path");
+
 const Randomstring = require("randomstring");
-const CryptoJS = require("crypto-js");
 const Marky = require("marky");
 const Iota = require("iota.lib.js");
-const Ccurl = require("ccurl.interface.js");
+
+const TanglestashCustomErrors = require('./app/custom-errors');
+const TanglestashHelpers = require('./app/helpers');
+const CcurlInterface = require("./app/ccurl-interface");
 
 
 /**
  * TANGLESTASH
- * The tangle of IOTA meets BitTorrent: An algorithm to persist any file onto the tangle of IOTA
+ * IOTA meets BitTorrent: An algorithm to persist any file onto the tangle of IOTA
  * By Jakob Löhnertz (www.jakob.codes)
  * **/
 
@@ -21,7 +23,7 @@ class Tanglestash {
      */
     constructor(provider, datatype, seed) {
         // CONSTANTS
-        this.IotaTransactionDepth = 4;
+        this.IotaTransactionDepth = 3;
         this.IotaTransactionMinWeightMagnitude = 14;
         this.IotaSeedLength = 81;
         this.IotaCharset = '9ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -29,7 +31,7 @@ class Tanglestash {
         this.ChunkPaddingLength = 19;
         this.ChunkTablePreviousHashLength = 109;
         this.ChunkContentLength = (this.IotaTransactionSignatureMessageFragmentLength - this.ChunkPaddingLength);
-        this.ChunkTableFragmentLength = (this.ChunkContentLength - this.ChunkTablePreviousHashLength);
+        this.ChunkTableHashAmount = parseInt(this.ChunkContentLength / this.ChunkTablePreviousHashLength) - 1;
         this.ChunkTag = 'TANGLESTASH9999999999999999';
         this.ChunkContentKey = 'CC';
         this.TotalChunkAmountKey = 'TC';
@@ -38,6 +40,7 @@ class Tanglestash {
 
         // PROPERTIES
         this.iota = new Iota({'provider': provider});  // Create IOTA instance utilizing the passed provider
+        this.libccurl = CcurlInterface.prepareCcurlProvider(Path.resolve('./lib/libccurl'));
         this.datatype = datatype || 'file';  // Set file as the default 'datatype' in case none was passed
         this.seed = seed || this.generateRandomIotaSeed();  // Generate a fresh and random IOTA seed
         this.successfulChunks = 0;
@@ -85,7 +88,6 @@ class Tanglestash {
         try {
             let datastring = this.encodeData(data, secret);
             let chunkContents = Tanglestash.chopIntoChunks(datastring, this.ChunkContentLength);
-            this.potentialParentTransactions = await this.retrievePotentialParentTransactions();
             this.chunkBundle = Tanglestash.generateChunkBundle(chunkContents);
         } catch (err) {
             throw err;
@@ -211,10 +213,10 @@ class Tanglestash {
                 if (err) {
                     switch (err.message) {
                         case 'Invalid inputs provided':
-                            reject(new IncorrectTransactionHashError(err.message));
+                            reject(new TanglestashCustomErrors.IncorrectTransactionHashError(err.message));
                             break;
                         case 'Invalid Bundle provided':
-                            reject(new NodeOutdatedError(err.message));
+                            reject(new TanglestashCustomErrors.NodeOutdatedError(err.message));
                             break;
                         default:
                             reject(new Error(err.message));
@@ -228,7 +230,8 @@ class Tanglestash {
 
     async persistChunkBundle() {
         for (let chunk in this.chunkBundle) {
-            this.persistChunk(this.chunkBundle[chunk]);
+            console.log(this.successfulChunks, this.totalChunkAmount, this.failedChunks);
+            await this.persistChunk(this.chunkBundle[chunk]);
         }
 
         try {
@@ -280,10 +283,11 @@ class Tanglestash {
                         reject(err);
                     }
                 } else {
+                    console.log(this.successfulChunks, this.totalChunkAmount, this.failedChunks);
                     for (let chunk in this.failedChunks) {
                         let failedChunk = this.chunkBundle[this.failedChunks[chunk]];
                         if (!failedChunk["persisted"]) {
-                            this.persistChunk(failedChunk);
+                            await this.persistChunk(failedChunk);
                         }
                     }
                 }
@@ -293,7 +297,7 @@ class Tanglestash {
 
     async finalizeChunkTable() {
         let chunkTable = this.buildChunkTable();
-        let chunkTableFragments = Tanglestash.chopIntoChunks(JSON.stringify(chunkTable), this.ChunkTableFragmentLength);
+        let chunkTableFragments = this.chopChunkTable(chunkTable, this.ChunkTableHashAmount);
         try {
             return await this.persistChunkTable(chunkTableFragments);
         } catch (err) {
@@ -313,11 +317,10 @@ class Tanglestash {
         try {
             let previousHash = this.FirstChunkKeyword;
             for (let fragment in chunkTableFragments) {
-                fragment = JSON.parse(chunkTableFragments[fragment]);
-                fragment[this.PreviousHashKey] = previousHash;
-                fragment[this.TotalChunkAmountKey] = this.totalChunkAmount;
+                chunkTableFragments[fragment][this.PreviousHashKey] = previousHash;
+                chunkTableFragments[fragment][this.TotalChunkAmountKey] = this.totalChunkAmount;
 
-                let trytesMessage = this.iota.utils.toTrytes(JSON.stringify(fragment));
+                let trytesMessage = this.iota.utils.toTrytes(JSON.stringify(chunkTableFragments[fragment]));
                 let address = await this.getNewIotaAddress();
                 let transaction = await this.sendTransaction(address, trytesMessage);
 
@@ -335,17 +338,17 @@ class Tanglestash {
 
         switch (this.datatype) {
             case 'file':
-                base64 = Tanglestash.parseFileIntoBase64(data);
+                base64 = TanglestashHelpers.parseFileIntoBase64(data);
                 break;
             case 'string':
-                base64 = Tanglestash.parseStringIntoBase64(data);
+                base64 = TanglestashHelpers.parseStringIntoBase64(data);
                 break;
             default:
-                throw new IncorrentDatatypeError('No correct "datatype" was passed');
+                throw new TanglestashCustomErrors.IncorrentDatatypeError('No correct "datatype" was passed');
         }
 
         if (secret) {
-            datastring = Tanglestash.encrypt(base64, secret);
+            datastring = TanglestashHelpers.encrypt(base64, secret);
         } else {
             datastring = base64;
         }
@@ -358,38 +361,29 @@ class Tanglestash {
         let result = '';
 
         if (secret) {
-            base64 = Tanglestash.decrypt(base64, secret);
+            base64 = TanglestashHelpers.decrypt(base64, secret);
             if (!base64) {
-                throw new IncorrectPasswordError('Provided secret incorrect');
+                throw new TanglestashCustomErrors.IncorrectPasswordError('Provided secret incorrect');
             }
         }
 
         switch (this.datatype) {
             case 'file':
-                result = Tanglestash.parseFileFromBase64(base64);
+                result = TanglestashHelpers.parseFileFromBase64(base64);
                 break;
             case 'string':
-                result = Tanglestash.parseStringFromBase64(base64);
+                result = TanglestashHelpers.parseStringFromBase64(base64);
                 break;
             default:
-                throw new IncorrentDatatypeError('No correct "datatype" was passed');
+                throw new TanglestashCustomErrors.IncorrentDatatypeError('No correct "datatype" was passed');
         }
 
         return result;
     }
 
-    async retrievePotentialParentTransactions() {
-        return new Promise((resolve, reject) => {
-            this.iota.api.findTransactionObjects({"tags": [this.ChunkTag]}, (err, results) => {
-                if (err) reject(err);
-                resolve(results);
-            });
-        });
-    }
-
     async sendTransaction(address, message) {
         try {
-            let parentTransactions = this.getParentTransactions();
+            let parentTransactions = await this.getParentTransactions();
             let transferTrytes = await this.prepareTransferTrytes(address, message);
             let transactionTrytes = await this.attachToTangle(
                 transferTrytes,
@@ -402,12 +396,15 @@ class Tanglestash {
         }
     }
 
-    getParentTransactions() {
-        let randomParentTransactionsIndex = Tanglestash.drawRandomNumberBetween(0, (this.potentialParentTransactions.length - 1));
-        let randomParentTransactions = this.potentialParentTransactions[randomParentTransactionsIndex];
-        return ({
-            branchTransaction: randomParentTransactions["hash"],
-            trunkTransaction: randomParentTransactions["trunkTransaction"],
+    async getParentTransactions() {
+        return new Promise((resolve, reject) => {
+            this.iota.api.getTransactionsToApprove(this.IotaTransactionDepth, null, (err, transactions) => {
+                if (err || !transactions) reject(err);
+                resolve({
+                    trunkTransaction: transactions.trunkTransaction,
+                    branchTransaction: transactions.branchTransaction,
+                });
+            });
         });
     }
 
@@ -424,30 +421,32 @@ class Tanglestash {
                     }
                 ],
                 (err, bundle) => {
-                    if (err) {
+                    if (err || !bundle) {
                         if (err.message.includes('failed consistency check')) {
-                            reject(new NodeOutdatedError(err.message));
+                            reject(new TanglestashCustomErrors.NodeOutdatedError(err.message));
                         } else {
-                            reject(new Error(err.message));
+                            reject(new Error(err.message || 'No correct bundle was returned'));
                         }
                     }
-                    resolve(bundle[0]);
+                    resolve(bundle);
                 });
         });
     }
 
     attachToTangle(trytes, trunkTransaction, branchTransaction) {
         return new Promise((resolve, reject) => {
-            Ccurl(
+            new CcurlInterface(
                 trunkTransaction,
                 branchTransaction,
                 this.IotaTransactionMinWeightMagnitude,
-                [trytes],
-                (err, result) => {
-                    if (err) reject(err);
-                    resolve(result);
-                }
-            );
+                trytes,
+                this.iota,
+                this.libccurl
+            ).hash().then((result) => {
+                resolve(result);
+            }).catch((err) => {
+                reject(err);
+            });
         });
     }
 
@@ -481,7 +480,7 @@ class Tanglestash {
                     // TODO: Check why this sometimes doesn't reject correctly (if node is outdated)
                     if (err) {
                         if (err.message.includes('failed consistency check')) {
-                            reject(new NodeOutdatedError(err.message));
+                            reject(new TanglestashCustomErrors.NodeOutdatedError(err.message));
                         } else {
                             reject(new Error(err.message));
                         }
@@ -549,81 +548,7 @@ class Tanglestash {
             retrieved: false,
         });
     }
-
-    static parseFileIntoBase64(path) {
-        let buffer = new Buffer(Fs.readFileSync(Path.resolve(path)));
-        return buffer.toString('base64');
-    }
-
-    static parseStringIntoBase64(string) {
-        return new Buffer(string).toString('base64');
-    }
-
-    static parseFileFromBase64(base64) {
-        return new Buffer(base64, 'base64');
-    }
-
-    static parseStringFromBase64(base64) {
-        return new Buffer(base64, 'base64').toString('utf-8');
-    }
-
-    static encrypt(plaintext, secret) {
-        let ciphertext = CryptoJS.AES.encrypt(plaintext, secret);
-        return ciphertext.toString();
-    }
-
-    static decrypt(ciphertext, secret) {
-        let bytes = CryptoJS.AES.decrypt(ciphertext, secret);
-        try {
-            return bytes.toString(CryptoJS.enc.Utf8);
-        } catch (err) {
-            return false;
-        }
-    }
-
-    static drawRandomNumberBetween(min, max) {
-        return Math.floor(Math.random() * (max - min + 1) + min);
-    }
 }
 
 
-/**
- * Custom Exceptions
- * **/
-
-class IncorrectPasswordError extends Error {
-    constructor(...args) {
-        super(...args);
-        this.name = IncorrectPasswordError.name;
-    }
-}
-
-class IncorrentDatatypeError extends Error {
-    constructor(...args) {
-        super(...args);
-        this.name = IncorrentDatatypeError.name;
-    }
-}
-
-class IncorrectTransactionHashError extends Error {
-    constructor(...args) {
-        super(...args);
-        this.name = IncorrectTransactionHashError.name;
-    }
-}
-
-class NodeOutdatedError extends Error {
-    constructor(...args) {
-        super(...args);
-        this.name = NodeOutdatedError.name;
-    }
-}
-
-
-module.exports = {
-    Tanglestash,
-    IncorrectPasswordError,
-    IncorrentDatatypeError,
-    IncorrectTransactionHashError,
-    NodeOutdatedError,
-};
+module.exports = Tanglestash;
