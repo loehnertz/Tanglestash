@@ -9,9 +9,6 @@ const CryptoJS = require('crypto-js');
  * Helper methods for the main class
  */
 class TanglestashHelpers {
-    static IotaSeedLength = 81;
-    static IotaCharset = '9ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-
     static generateRandomIotaSeed() {
         return Randomstring.generate({
             length: TanglestashHelpers.IotaSeedLength,
@@ -50,6 +47,9 @@ class TanglestashHelpers {
         }
     }
 }
+
+TanglestashHelpers.IotaSeedLength = 81;
+TanglestashHelpers.IotaCharset = '9ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
 
 module.exports = TanglestashHelpers;

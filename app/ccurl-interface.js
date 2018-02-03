@@ -3,6 +3,7 @@
  * by Dominik Schiener (IOTA Foundation)
  * licensed under MIT license
  * as of 3rd of February 2018
+ *
  * Source: https://github.com/iotaledger/ccurl.interface.js
  */
 
@@ -61,12 +62,12 @@ class CcurlInterface {
      * Assign it the trunk / branch which the user has supplied
      * If there is a bundle, chain the bundle transactions via trunkTransaction together
      *
-     * @param singleTryte The single tryte from a bundle to perform the PoW on
+     * @param singleTryteString A single tryte string from a bundle to perform the PoW on
      * @returns {Promise}
      */
-    getBundleTrytes(singleTryte) {
+    getBundleTrytes(singleTryteString) {
         return new Promise((resolve, reject) => {
-            let txObject = this.iota.utils.transactionObject(singleTryte);
+            let txObject = this.iota.utils.transactionObject(singleTryteString);
             txObject.tag = txObject.tag || txObject.obsoleteTag;
             txObject.attachmentTimestamp = Date.now();
             txObject.attachmentTimestampLowerBound = 0;
@@ -159,7 +160,8 @@ class CcurlInterface {
                 ccurl_pow_interrupt: ['void', []]
             });
 
-            if (!libccurl.hasOwnProperty("ccurl_pow") ||
+            if (
+                !libccurl.hasOwnProperty("ccurl_pow") ||
                 !libccurl.hasOwnProperty("ccurl_pow_finalize") ||
                 !libccurl.hasOwnProperty("ccurl_pow_interrupt")
             ) {
