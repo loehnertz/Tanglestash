@@ -1,6 +1,6 @@
 {
   "name": "tanglestash",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "IOTA meets BitTorrent: An algorithm to persist any file onto the tangle of IOTA",
   "main": "index.js",
   "scripts": {
