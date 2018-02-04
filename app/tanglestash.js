@@ -349,22 +349,29 @@ class Tanglestash {
      * Persists the Chunk Table fragments onto the tangle.
      */
     async persistChunkTable(chunkTableFragments) {
-        try {
-            let previousHash = this.FirstChunkKeyword;
-            for (let fragment in chunkTableFragments) {
-                chunkTableFragments[fragment][this.PreviousHashKey] = previousHash;
-                chunkTableFragments[fragment][this.TotalChunkAmountKey] = this.totalChunkAmount;
+        let previousHash = this.FirstChunkKeyword;
+        for (let fragment in chunkTableFragments) {
+            chunkTableFragments[fragment][this.PreviousHashKey] = previousHash;
+            chunkTableFragments[fragment][this.TotalChunkAmountKey] = this.totalChunkAmount;
 
-                let trytesMessage = this.iota.utils.toTrytes(JSON.stringify(chunkTableFragments[fragment]));
-                let address = await this.getNewIotaAddress();
-                let transaction = await this.sendTransaction(address, trytesMessage);
+            let trytesMessage = this.iota.utils.toTrytes(JSON.stringify(chunkTableFragments[fragment]));
+            let address = await this.getNewIotaAddress();
 
-                previousHash = transaction["hash"];
+            let transaction = null;
+            while (!transaction) {
+                transaction = await this.persistChunkTableFragment(address, trytesMessage);
             }
-            return previousHash;
-        } catch (err) {
-            throw err;
+
+            previousHash = transaction["hash"];
         }
+        return previousHash;
+    }
+
+    /**
+     * A wrapper method for `sendTransaction()` to be able to retry to persist a failed Chunk Table fragment.
+     */
+    async persistChunkTableFragment(address, trytesMessage) {
+        return await this.sendTransaction(address, trytesMessage);
     }
 
     /**
