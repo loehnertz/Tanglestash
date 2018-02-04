@@ -109,7 +109,6 @@ class CcurlInterface {
                 if (!returnedTrytes) {
                     reject(new TanglestashCustomErrors.LibccurlInterruptionError('PoW failed!'));
                 } else {
-
                     let newTxObject = this.iota.utils.transactionObject(returnedTrytes);
 
                     // Assign the previousTxHash to this new transaction hash
