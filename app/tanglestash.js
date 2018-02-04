@@ -210,12 +210,10 @@ class Tanglestash {
      * Retrieves JSON from a transaction.
      */
     async retrieveJSONFromTransaction(transactionHash) {
-        try {
-            let transactionBundle = await this.getTransactionFromTangle(transactionHash);
-            return JSON.parse(this.iota.utils.extractJson(transactionBundle));
-        } catch (err) {
+        let transactionBundle = await this.getTransactionFromTangle(transactionHash).catch((err) => {
             throw err;
-        }
+        });
+        return JSON.parse(this.iota.utils.extractJson(transactionBundle));
     }
 
     /**
