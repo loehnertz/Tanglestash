@@ -156,7 +156,7 @@ class Tanglestash {
      */
     finalizeRetrievalOfChunkBundle() {
         return new Promise((resolve, reject) => {
-            let finishedCheck = setInterval(async () => {
+            let finishedCheck = setInterval(() => {
                 if (this.successfulChunks === this.totalChunkAmount) {
                     clearInterval(finishedCheck);
                     try {
@@ -388,7 +388,7 @@ class Tanglestash {
     /**
      * Retrieves a `trunkTransaction` as well as a `branchTransaction` via the node for a new transaction.
      */
-    async getParentTransactions() {
+    getParentTransactions() {
         return new Promise((resolve, reject) => {
             this.iota.api.getTransactionsToApprove(this.IotaTransactionDepth, null, (err, transactions) => {
                 if (err) reject(err);
@@ -404,7 +404,7 @@ class Tanglestash {
     /**
      * Prepares a transaction for the PoW.
      */
-    async prepareTransferTrytes(address, message) {
+    prepareTransferTrytes(address, message) {
         return new Promise((resolve, reject) => {
             this.iota.api.prepareTransfers(
                 this.seed,
