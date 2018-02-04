@@ -13,7 +13,7 @@ const TanglestashCustomErrors = require('./tanglestash-errors');
 
 
 class CcurlInterface {
-    constructor(trunkTransaction, branchTransaction, minWeightMagnitude, trytes, iotaProvider, libccurl) {
+    constructor(trunkTransaction, branchTransaction, trytes, minWeightMagnitude, iotaProvider, libccurl) {
         // CONSTANTS
         this.MAX_TIMESTAMP_VALUE = (Math.pow(3, 27) - 1) / 2;
 
@@ -22,6 +22,7 @@ class CcurlInterface {
         this.branchTransaction = branchTransaction;
         this.minWeightMagnitude = minWeightMagnitude;
         this.trytes = trytes;
+        this.finishedPoW = false;
         this.index = 0;
         this.previousTxHash = null;
         this.finalBundleTrytes = [];
@@ -29,45 +30,54 @@ class CcurlInterface {
         this.libccurl = libccurl || CcurlInterface.prepareCcurlProvider('.');
     }
 
-    hash() {
-        return new Promise(async (resolve, reject) => {
-            await this.checkInput();
+    /**
+     * Launches the needed methods to perform the PoW.
+     */
+    performPoW() {
+        return new Promise((resolve, reject) => {
             try {
+                this.checkInput();
                 this.loopTrytes(this.index);
             } catch (err) {
                 reject(err);
             }
             setInterval(() => {
-                if (this.index >= this.trytes.length) {
-                    resolve(this.finalBundleTrytes.reverse());
-                }
-            }, 123);
+                if (this.finishedPoW) resolve(this.finalBundleTrytes.reverse());
+            }, 1234);
         });
     };
 
+    /**
+     * Iterates over the passed trytes to perform the PoW on each of them.
+     */
     loopTrytes() {
         this.getBundleTrytes(this.trytes[this.index]).then(() => {
             this.index++;
             if (this.index < this.trytes.length) {
-                this.loopTrytes();
+                try {
+                    this.loopTrytes();
+                } catch (err) {
+                    throw err;
+                }
+            } else {
+                this.finishedPoW = true;
             }
         }).catch((err) => {
-            throw new TanglestashCustomErrors.TryteLoopingError(err.message);
+            throw err;
         });
     }
 
     /**
-     * LOGIC:
+     * Performs the actual PoW.
+     *
+     * Logic:
      * Start with last index transaction
      * Assign it the trunk / branch which the user has supplied
      * If there is a bundle, chain the bundle transactions via trunkTransaction together
-     *
-     * @param singleTryteString A single tryte string from a bundle to perform the PoW on
-     * @returns {Promise}
      */
-    getBundleTrytes(singleTryteString) {
+    getBundleTrytes(singleTrytesString) {
         return new Promise((resolve, reject) => {
-            let txObject = this.iota.utils.transactionObject(singleTryteString);
+            let txObject = this.iota.utils.transactionObject(singleTrytesString);
             txObject.tag = txObject.tag || txObject.obsoleteTag;
             txObject.attachmentTimestamp = Date.now();
             txObject.attachmentTimestampLowerBound = 0;
@@ -79,7 +89,7 @@ class CcurlInterface {
             if (!this.previousTxHash) {
                 // Check if last transaction in the bundle
                 if (txObject.lastIndex !== txObject.currentIndex) {
-                    return new Error("Wrong bundle order. The bundle should be ordered in descending order from currentIndex");
+                    return new Error('Wrong bundle order. The bundle should be ordered in descending order from currentIndex');
                 }
 
                 txObject.trunkTransaction = this.trunkTransaction;
@@ -93,62 +103,65 @@ class CcurlInterface {
 
             let newTrytes = this.iota.utils.transactionTrytes(txObject);
             this.libccurl.ccurl_pow.async(newTrytes, this.minWeightMagnitude, (err, returnedTrytes) => {
-                if (err) {
-                    reject(err);
-                } else if (!returnedTrytes) {
-                    reject(new TanglestashCustomErrors.LibccurlInterruptionError());
+                if (err) reject(err);
+
+                // Check that the PoW actually succeeded
+                if (!returnedTrytes) {
+                    reject(new TanglestashCustomErrors.LibccurlInterruptionError('PoW failed!'));
+                } else {
+
+                    let newTxObject = this.iota.utils.transactionObject(returnedTrytes);
+
+                    // Assign the previousTxHash to this new transaction hash
+                    this.previousTxHash = newTxObject.hash;
+                    // Push the returned trytes to the bundle array
+                    this.finalBundleTrytes.push(returnedTrytes);
+
+                    resolve();
                 }
-
-                let newTxObject = this.iota.utils.transactionObject(returnedTrytes);
-
-                // Assign the previousTxHash to this new transaction hash
-                this.previousTxHash = newTxObject.hash;
-                // Push the returned trytes to the bundle array
-                this.finalBundleTrytes.push(returnedTrytes);
-
-                resolve();
             });
         });
     }
 
     /**
-     * Checks the inputs into the class object for correctness
+     * Checks the inputs into the class object for correctness.
      */
     checkInput() {
-        if (!this.libccurl.hasOwnProperty("ccurl_pow")) {
-            return new Error("Hashing not available");
+        // Check if `libccurl` is available
+        if (!this.libccurl.hasOwnProperty('ccurl_pow')) {
+            return new Error('Hashing not available');
         }
 
-        // inputValidator: Check if correct hash
+        // Check if valid `trunkTransaction` was passed
         if (!this.iota.valid.isHash(this.trunkTransaction)) {
-            return new Error("Invalid trunkTransaction");
+            return new Error('Invalid trunkTransaction');
         }
 
-        // inputValidator: Check if correct hash
+        // Check if valid `branchTransaction` was passed
         if (!this.iota.valid.isHash(this.branchTransaction)) {
-            return new Error("Invalid branchTransaction");
+            return new Error('Invalid branchTransaction');
         }
 
-        // inputValidator: Check if int
+        // Check if a valid `minWeightMagnitude` was passed
         if (!this.iota.valid.isValue(this.minWeightMagnitude)) {
-            return new Error("Invalid minWeightMagnitude");
+            return new Error('Invalid minWeightMagnitude');
         }
 
-        //inputValidator: Check if array of trytes
+        // Check if the passed trytes are valid
         if (!this.iota.valid.isArrayOfTrytes(this.trytes)) {
-            return new Error("Invalid trytes supplied");
+            return new Error('Invalid trytes supplied');
         }
     }
 
     /**
-     * Creates an instance of a libccurl object via a dynamic library of it
+     * Creates an instance of a libccurl object via a dynamic library of it.
      *
      * @param ccurlPath The path to the dynamic library
      * @returns {Object} A libccurl object
      */
     static prepareCcurlProvider(ccurlPath) {
         if (!ccurlPath) {
-            throw new Error("Path to ccurl is mandatory!");
+            throw new Error('Path to ccurl is mandatory!');
         }
 
         let fullPath = ccurlPath + '/libccurl';
@@ -161,11 +174,11 @@ class CcurlInterface {
             });
 
             if (
-                !libccurl.hasOwnProperty("ccurl_pow") ||
-                !libccurl.hasOwnProperty("ccurl_pow_finalize") ||
-                !libccurl.hasOwnProperty("ccurl_pow_interrupt")
+                !libccurl.hasOwnProperty('ccurl_pow') ||
+                !libccurl.hasOwnProperty('ccurl_pow_finalize') ||
+                !libccurl.hasOwnProperty('ccurl_pow_interrupt')
             ) {
-                throw new Error("Could not load hashing library.");
+                throw new Error('Could not load hashing library.');
             }
 
             return libccurl;

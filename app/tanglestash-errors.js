@@ -30,17 +30,17 @@ class NodeOutdatedError extends Error {
     }
 }
 
+class NodeCouldNotProvideTransactionsToApproveError extends Error {
+    constructor(...args) {
+        super(...args);
+        this.name = NodeCouldNotProvideTransactionsToApproveError.name;
+    }
+}
+
 class LibccurlCreationError extends Error {
     constructor(...args) {
         super(...args);
         this.name = LibccurlCreationError.name;
-    }
-}
-
-class TryteLoopingError extends Error {
-    constructor(...args) {
-        super(...args);
-        this.name = TryteLoopingError.name;
     }
 }
 
@@ -57,7 +57,7 @@ module.exports = {
     IncorrectDatatypeError,
     IncorrectTransactionHashError,
     NodeOutdatedError,
+    NodeCouldNotProvideTransactionsToApproveError,
     LibccurlCreationError,
-    TryteLoopingError,
     LibccurlInterruptionError,
 };

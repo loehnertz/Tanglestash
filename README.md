@@ -1,4 +1,4 @@
-[![license](https://img.shields.io/npm/l/tanglestash.svg)](https://www.npmjs.com/package/tanglestash)
+[![license](https://img.shields.io/npm/l/tanglestash.svg)](LICENSE)
 [![npm](https://img.shields.io/npm/v/tanglestash.svg)](https://www.npmjs.com/package/tanglestash)
 [![npm](https://img.shields.io/npm/dt/tanglestash.svg)](https://www.npmjs.com/package/tanglestash)
 [![daviddm](https://david-dm.org/loehnertz/Tanglestash.svg)](https://david-dm.org/loehnertz/Tanglestash)
@@ -111,21 +111,6 @@ tanglestash.saveToTangle(data, secret)
 #### Return Value
 
 1. **`Promise.<string>`** - The last transaction hash of the created chain; called 'entry-hash'
-
----
-
-### `generateRandomIotaSeed`
-
-Generates a random valid IOTA wallet seed.
-
-#### Input
-```js
-tanglestash.generateRandomIotaSeed()
-```
-
-#### Return Value
-
-1. **`String`** - The generated seed
 
 ---
 
