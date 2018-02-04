@@ -226,11 +226,14 @@ class Tanglestash {
             this.iota.api.getBundle(transactionHash, (err, transactionBundle) => {
                 if (err) {
                     switch (err.message) {
-                        case 'Invalid inputs provided':
+                        case 'Invalid inputs provided.':
                             reject(new TanglestashCustomErrors.IncorrectTransactionHashError(err.message));
                             break;
-                        case 'Invalid Bundle provided':
+                        case 'Invalid Bundle provided.':
                             reject(new TanglestashCustomErrors.NodeOutdatedError(err.message));
+                            break;
+                        case 'Invalid tail transaction supplied.':
+                            reject(new TanglestashCustomErrors.MalformedPersistedDataError(err.message));
                             break;
                         default:
                             reject(new Error(err.message));

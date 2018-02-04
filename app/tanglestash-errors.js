@@ -23,6 +23,13 @@ class IncorrectTransactionHashError extends Error {
     }
 }
 
+class MalformedPersistedDataError extends Error {
+    constructor(...args) {
+        super(...args);
+        this.name = MalformedPersistedDataError.name;
+    }
+}
+
 class NodeOutdatedError extends Error {
     constructor(...args) {
         super(...args);
@@ -56,6 +63,7 @@ module.exports = {
     IncorrectPasswordError,
     IncorrectDatatypeError,
     IncorrectTransactionHashError,
+    MalformedPersistedDataError,
     NodeOutdatedError,
     NodeCouldNotProvideTransactionsToApproveError,
     LibccurlCreationError,
