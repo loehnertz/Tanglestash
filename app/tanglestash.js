@@ -359,19 +359,12 @@ class Tanglestash {
 
             let transaction = null;
             while (!transaction) {
-                transaction = await this.persistChunkTableFragment(address, trytesMessage);
+                transaction = await this.sendTransaction(address, trytesMessage);
             }
 
             previousHash = transaction["hash"];
         }
         return previousHash;
-    }
-
-    /**
-     * A wrapper method for `sendTransaction()` to be able to retry to persist a failed Chunk Table fragment.
-     */
-    async persistChunkTableFragment(address, trytesMessage) {
-        return await this.sendTransaction(address, trytesMessage);
     }
 
     /**

@@ -34,12 +34,16 @@ class CcurlInterface {
      * Launches the needed methods to perform the PoW.
      */
     performPoW() {
-        return new Promise(async (resolve) => {
+        return new Promise(async (resolve, reject) => {
             await this.checkInput();
-            this.loopTrytes(this.index);
+            try {
+                this.loopTrytes(this.index);
+            } catch (err) {
+                reject(err);
+            }
             setInterval(() => {
                 if (this.finishedPoW) resolve(this.finalBundleTrytes.reverse());
-            }, 123);
+            }, 1234);
         });
     };
 
@@ -50,12 +54,16 @@ class CcurlInterface {
         this.getBundleTrytes(this.trytes[this.index]).then(() => {
             this.index++;
             if (this.index < this.trytes.length) {
-                this.loopTrytes();
+                try {
+                    this.loopTrytes();
+                } catch (err) {
+                    throw err;
+                }
             } else {
                 this.finishedPoW = true;
             }
         }).catch((err) => {
-            throw new TanglestashCustomErrors.TryteLoopingError(err.message);
+            throw err;
         });
     }
 
