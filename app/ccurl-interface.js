@@ -103,7 +103,7 @@ class CcurlInterface {
 
             let newTrytes = this.iota.utils.transactionTrytes(txObject);
             this.libccurl.ccurl_pow.async(newTrytes, this.minWeightMagnitude, (err, returnedTrytes) => {
-                if (err) reject(err);
+                if (err) return reject(err);
 
                 // Check that the PoW actually succeeded
                 if (!returnedTrytes) {
