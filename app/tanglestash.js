@@ -37,7 +37,7 @@ class Tanglestash {
 
         // PROPERTIES
         this.iota = new Iota({'provider': provider});  // Create IOTA instance utilizing the passed provider
-        this.libccurl = CcurlInterface.prepareCcurlProvider(Path.resolve('./lib/libccurl'));  // Creates an instance of libccurl to perform the PoW
+        this.libccurl = CcurlInterface.prepareCcurlProvider(Path.join(__dirname, '../lib/libccurl'));  // Creates an instance of libccurl to perform the PoW
         this.datatype = datatype || 'file';  // Set file as the default 'datatype' in case none was passed
         this.seed = seed || TanglestashHelpers.generateRandomIotaSeed();  // Generate a fresh and random IOTA seed
         this.successfulChunks = 0;
