@@ -109,11 +109,9 @@ class Tanglestash {
             this.retrieveChunk(chunkTable[key], key);
         });
 
-        try {
-            return await this.finalizeRetrievalOfChunkBundle();
-        } catch (err) {
+        return await this.finalizeRetrievalOfChunkBundle().catch((err) => {
             throw err;
-        }
+        });
     }
 
     /**
@@ -253,11 +251,9 @@ class Tanglestash {
             await this.persistChunk(this.chunkBundle[chunk]);
         }
 
-        try {
-            return await this.finalizePersistingOfChunkBundle();
-        } catch (err) {
+        return await this.finalizePersistingOfChunkBundle().catch((err) => {
             throw err;
-        }
+        });
     }
 
     /**
@@ -371,18 +367,20 @@ class Tanglestash {
      * Dispatches all the needed steps to send a new transaction.
      */
     async sendTransaction(address, message) {
-        try {
-            let parentTransactions = await this.getParentTransactions();
-            let transferTrytes = await this.prepareTransferTrytes(address, message);
-            let transactionTrytes = await this.attachToTangle(
-                transferTrytes,
-                parentTransactions.trunkTransaction,
-                parentTransactions.branchTransaction,
-            );
-            return await this.broadcastTransaction(transactionTrytes);
-        } catch (err) {
+        let parentTransactions = await this.getParentTransactions().catch((err) => {
             throw err;
-        }
+        });
+        let transferTrytes = await this.prepareTransferTrytes(address, message);
+        let transactionTrytes = await this.attachToTangle(
+            transferTrytes,
+            parentTransactions.trunkTransaction,
+            parentTransactions.branchTransaction,
+        ).catch((err) => {
+            throw err;
+        });
+        return await this.broadcastTransaction(transactionTrytes).catch((err) => {
+            throw err;
+        });
     }
 
     /**
@@ -392,11 +390,15 @@ class Tanglestash {
         return new Promise((resolve, reject) => {
             this.iota.api.getTransactionsToApprove(this.IotaTransactionDepth, null, (err, transactions) => {
                 if (err) reject(err);
-                if (!transactions) reject(new TanglestashCustomErrors.NodeCouldNotProvideTransactionsToApproveError());
-                resolve({
-                    trunkTransaction: transactions.trunkTransaction,
-                    branchTransaction: transactions.branchTransaction,
-                });
+
+                if (!transactions) {
+                    reject(new TanglestashCustomErrors.NodeCouldNotProvideTransactionsToApproveError());
+                } else {
+                    resolve({
+                        trunkTransaction: transactions.trunkTransaction,
+                        branchTransaction: transactions.branchTransaction,
+                    });
+                }
             });
         });
     }

@@ -34,9 +34,9 @@ class CcurlInterface {
      * Launches the needed methods to perform the PoW.
      */
     performPoW() {
-        return new Promise(async (resolve, reject) => {
-            await this.checkInput();
+        return new Promise((resolve, reject) => {
             try {
+                this.checkInput();
                 this.loopTrytes(this.index);
             } catch (err) {
                 reject(err);
@@ -75,9 +75,9 @@ class CcurlInterface {
      * Assign it the trunk / branch which the user has supplied
      * If there is a bundle, chain the bundle transactions via trunkTransaction together
      */
-    getBundleTrytes(singleTryteString) {
+    getBundleTrytes(singleTrytesString) {
         return new Promise((resolve, reject) => {
-            let txObject = this.iota.utils.transactionObject(singleTryteString);
+            let txObject = this.iota.utils.transactionObject(singleTrytesString);
             txObject.tag = txObject.tag || txObject.obsoleteTag;
             txObject.attachmentTimestamp = Date.now();
             txObject.attachmentTimestampLowerBound = 0;
@@ -103,20 +103,22 @@ class CcurlInterface {
 
             let newTrytes = this.iota.utils.transactionTrytes(txObject);
             this.libccurl.ccurl_pow.async(newTrytes, this.minWeightMagnitude, (err, returnedTrytes) => {
-                if (err) {
-                    reject(err);
-                } else if (!returnedTrytes) {
+                if (err) reject(err);
+
+                // Check that the PoW actually succeeded
+                if (!returnedTrytes) {
                     reject(new TanglestashCustomErrors.LibccurlInterruptionError('PoW failed!'));
+                } else {
+
+                    let newTxObject = this.iota.utils.transactionObject(returnedTrytes);
+
+                    // Assign the previousTxHash to this new transaction hash
+                    this.previousTxHash = newTxObject.hash;
+                    // Push the returned trytes to the bundle array
+                    this.finalBundleTrytes.push(returnedTrytes);
+
+                    resolve();
                 }
-
-                let newTxObject = this.iota.utils.transactionObject(returnedTrytes);
-
-                // Assign the previousTxHash to this new transaction hash
-                this.previousTxHash = newTxObject.hash;
-                // Push the returned trytes to the bundle array
-                this.finalBundleTrytes.push(returnedTrytes);
-
-                resolve();
             });
         });
     }
@@ -159,7 +161,7 @@ class CcurlInterface {
      */
     static prepareCcurlProvider(ccurlPath) {
         if (!ccurlPath) {
-            throw new Error("Path to ccurl is mandatory!");
+            throw new Error('Path to ccurl is mandatory!');
         }
 
         let fullPath = ccurlPath + '/libccurl';
@@ -172,11 +174,11 @@ class CcurlInterface {
             });
 
             if (
-                !libccurl.hasOwnProperty("ccurl_pow") ||
-                !libccurl.hasOwnProperty("ccurl_pow_finalize") ||
-                !libccurl.hasOwnProperty("ccurl_pow_interrupt")
+                !libccurl.hasOwnProperty('ccurl_pow') ||
+                !libccurl.hasOwnProperty('ccurl_pow_finalize') ||
+                !libccurl.hasOwnProperty('ccurl_pow_interrupt')
             ) {
-                throw new Error("Could not load hashing library.");
+                throw new Error('Could not load hashing library.');
             }
 
             return libccurl;
