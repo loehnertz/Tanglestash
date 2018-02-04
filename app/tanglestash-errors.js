@@ -44,13 +44,6 @@ class LibccurlCreationError extends Error {
     }
 }
 
-class TryteLoopingError extends Error {
-    constructor(...args) {
-        super(...args);
-        this.name = TryteLoopingError.name;
-    }
-}
-
 class LibccurlInterruptionError extends Error {
     constructor(...args) {
         super(...args);
@@ -66,6 +59,5 @@ module.exports = {
     NodeOutdatedError,
     NodeCouldNotProvideTransactionsToApproveError,
     LibccurlCreationError,
-    TryteLoopingError,
     LibccurlInterruptionError,
 };
