@@ -158,9 +158,9 @@ class Tanglestash {
                 if (this.successfulChunks === this.totalChunkAmount) {
                     clearInterval(finishedCheck);
                     try {
-                        resolve(this.chunkBundle);
+                        return resolve(this.chunkBundle);
                     } catch (err) {
-                        reject(err);
+                        return reject(err);
                     }
                 } else {
                     for (let chunk in this.failedChunks) {
@@ -225,20 +225,20 @@ class Tanglestash {
                 if (err) {
                     switch (err.message) {
                         case 'Invalid inputs provided.':
-                            reject(new TanglestashCustomErrors.IncorrectTransactionHashError(err.message));
+                            return reject(new TanglestashCustomErrors.IncorrectTransactionHashError(err.message));
                             break;
                         case 'Invalid Bundle provided.':
-                            reject(new TanglestashCustomErrors.NodeOutdatedError(err.message));
+                            return reject(new TanglestashCustomErrors.NodeOutdatedError(err.message));
                             break;
                         case 'Invalid tail transaction supplied.':
-                            reject(new TanglestashCustomErrors.MalformedPersistedDataError(err.message));
+                            return reject(new TanglestashCustomErrors.MalformedPersistedDataError(err.message));
                             break;
                         default:
-                            reject(new Error(err.message));
+                            return reject(new Error(err.message));
                             break;
                     }
                 }
-                resolve(transactionBundle);
+                return resolve(transactionBundle);
             });
         });
     }
@@ -387,12 +387,12 @@ class Tanglestash {
     getParentTransactions() {
         return new Promise((resolve, reject) => {
             this.iota.api.getTransactionsToApprove(this.IotaTransactionDepth, null, (err, transactions) => {
-                if (err) reject(err);
+                if (err) return reject(err);
 
                 if (!transactions) {
-                    reject(new TanglestashCustomErrors.NodeCouldNotProvideTransactionsToApproveError());
+                    return reject(new TanglestashCustomErrors.NodeCouldNotProvideTransactionsToApproveError());
                 } else {
-                    resolve({
+                    return resolve({
                         trunkTransaction: transactions.trunkTransaction,
                         branchTransaction: transactions.branchTransaction,
                     });
@@ -419,12 +419,12 @@ class Tanglestash {
                 (err, bundle) => {
                     if (err || !bundle) {
                         if (err.message.includes('failed consistency check')) {
-                            reject(new TanglestashCustomErrors.NodeOutdatedError(err.message));
+                            return reject(new TanglestashCustomErrors.NodeOutdatedError(err.message));
                         } else {
-                            reject(new Error(err.message || 'No correct bundle was returned'));
+                            return reject(new Error(err.message || 'No correct bundle was returned'));
                         }
                     }
-                    resolve(bundle);
+                    return resolve(bundle);
                 });
         });
     }
@@ -442,9 +442,9 @@ class Tanglestash {
                 this.iota,
                 this.libccurl
             ).performPoW().then((result) => {
-                resolve(result);
+                return resolve(result);
             }).catch((err) => {
-                reject(err);
+                return reject(err);
             });
         });
     }
@@ -455,8 +455,8 @@ class Tanglestash {
     broadcastTransaction(transactionTrytes) {
         return new Promise((resolve, reject) => {
             this.iota.api.storeAndBroadcast(transactionTrytes, (err, output) => {
-                if (err) reject(err);
-                resolve(this.iota.utils.transactionObject(transactionTrytes[0]));
+                if (err) return reject(err);
+                return resolve(this.iota.utils.transactionObject(transactionTrytes[0]));
             });
         });
     }
@@ -526,8 +526,8 @@ class Tanglestash {
     getNewIotaAddress() {
         return new Promise((resolve, reject) => {
             this.iota.api.getNewAddress(this.seed, (err, address) => {
-                if (err) reject(new Error(err.message));
-                resolve(address);
+                if (err) return reject(new Error(err.message));
+                return resolve(address);
             });
         });
     }

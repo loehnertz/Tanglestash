@@ -39,10 +39,10 @@ class CcurlInterface {
                 this.checkInput();
                 this.loopTrytes(this.index);
             } catch (err) {
-                reject(err);
+                return reject(err);
             }
             setInterval(() => {
-                if (this.finishedPoW) resolve(this.finalBundleTrytes.reverse());
+                if (this.finishedPoW) return resolve(this.finalBundleTrytes.reverse());
             }, 1234);
         });
     };
@@ -103,11 +103,11 @@ class CcurlInterface {
 
             let newTrytes = this.iota.utils.transactionTrytes(txObject);
             this.libccurl.ccurl_pow.async(newTrytes, this.minWeightMagnitude, (err, returnedTrytes) => {
-                if (err) reject(err);
+                if (err) return reject(err);
 
                 // Check that the PoW actually succeeded
                 if (!returnedTrytes) {
-                    reject(new TanglestashCustomErrors.LibccurlInterruptionError('PoW failed!'));
+                    return reject(new TanglestashCustomErrors.LibccurlInterruptionError('PoW failed!'));
                 } else {
                     let newTxObject = this.iota.utils.transactionObject(returnedTrytes);
 
@@ -116,7 +116,7 @@ class CcurlInterface {
                     // Push the returned trytes to the bundle array
                     this.finalBundleTrytes.push(returnedTrytes);
 
-                    resolve();
+                    return resolve();
                 }
             });
         });
