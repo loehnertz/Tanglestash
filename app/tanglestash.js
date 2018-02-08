@@ -252,9 +252,11 @@ class Tanglestash {
             await this.persistChunk(this.chunkBundle[chunk]);
         }
 
-        return await this.finalizePersistingOfChunkBundle().catch((err) => {
+        try {
+            return await this.finalizePersistingOfChunkBundle();
+        } catch (err) {
             throw err;
-        });
+        }
     }
 
     /**
@@ -297,25 +299,20 @@ class Tanglestash {
      * Kicks off the persisting of the Chunk Table once every chunk containing content is successfully persisted.
      */
     async finalizePersistingOfChunkBundle() {
-        return new Promise((resolve, reject) => {
-            let finishedCheck = setInterval(async () => {
-                if (this.successfulChunks === this.totalChunkAmount) {
-                    clearInterval(finishedCheck);
-                    try {
-                        resolve(await this.finalizeChunkTable());
-                    } catch (err) {
-                        reject(err);
-                    }
-                } else {
-                    for (let chunk in this.failedChunks) {
-                        let failedChunk = this.chunkBundle[this.failedChunks[chunk]];
-                        if (!failedChunk["persisted"]) {
-                            await this.persistChunk(failedChunk);
-                        }
-                    }
+        while (this.successfulChunks !== this.totalChunkAmount) {
+            for (let chunk in this.failedChunks) {
+                let failedChunk = this.chunkBundle[this.failedChunks[chunk]];
+                if (!failedChunk["persisted"]) {
+                    await this.persistChunk(failedChunk);
                 }
-            }, 1234);
-        });
+            }
+        }
+
+        try {
+            return await this.finalizeChunkTable();
+        } catch (err) {
+            throw err;
+        }
     }
 
     /**
